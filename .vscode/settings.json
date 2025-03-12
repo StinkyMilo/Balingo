@@ -1,0 +1,10 @@
+{
+    "Lua.diagnostics.globals": [
+        "G",
+        "sendTraceMessage",
+        "create_UIBox_generic_options",
+        "create_tabs",
+        "localize",
+        "create_UIBox_current_hands"
+    ]
+}
