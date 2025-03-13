@@ -5,6 +5,7 @@
         "create_UIBox_generic_options",
         "create_tabs",
         "localize",
-        "create_UIBox_current_hands"
+        "create_UIBox_current_hands",
+        "SMODS"
     ]
 }
