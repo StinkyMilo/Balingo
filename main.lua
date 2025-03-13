@@ -107,7 +107,8 @@ BG.Challenges = {
   {
     name="Five of a Kind",
     text={
-      "Play a Five of a Kind."
+      "Play a Five",
+      "of a Kind."
     }
   },
   {
@@ -175,11 +176,25 @@ BG.Challenges = {
       "Get 500 chips",
       "from one hand."
     }
+  },
+  {
+    name="Seals",
+    text={
+      "Play a hand",
+      "containing every",
+      "seal."
+    }
   }
 }
 
+function BG.UI.get_challenges()
+  -- TODO: Shuffle then return first 25.
+  return {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25}
+end
+
 function BG.UI.get_challenge_box(index)
   local children = {}
+  sendTraceMessage("Got to " .. tostring(index), "BingoLog")
   for i,text in pairs(BG.Challenges[index].text) do
     table.insert(children,{
       n=G.UIT.R,
@@ -194,7 +209,7 @@ function BG.UI.get_challenge_box(index)
   end
   local root_node = {
     n=G.UIT.C,
-    config={align="cm",minh=1.5,minw=2,padding=0.05,r=0.1,hover=true,colour=G.C.WHITE,shadow=true},
+    config={align="cm",minh=1.5,maxh=1.5,minw=2.0,maxw=2.0,padding=0.05,r=0.1,hover=true,colour=G.C.WHITE,shadow=true},
     nodes=children
   }
   return root_node
@@ -237,150 +252,64 @@ function G.UIDEF.run_info()
 end
 
 function BG.UI.BoardDisplay()
+  local ch = BG.UI.get_challenges()
   return {
     n=G.UIT.ROOT, 
     config={align="tl", minw=3, padding = 0.1, r=0.1, color=G.C.CLEAR},
     nodes={
       {
         n=G.UIT.R,
-        config={align="tl",padding=0.3},nodes=
+        config={align="tl",padding=0.2},nodes=
           {
-            BG.UI.get_challenge_box(1),
-            BG.UI.get_challenge_box(2),
-            {
-              n=G.UIT.C,
-              config={align="cm",minh=1.5,minw=1.5,padding=0.05,r=0.1,hover=true,colour=G.C.WHITE,shadow=true},
-              nodes={
-                {
-                  n=G.UIT.T,
-                  config={text="3",colour=G.C.BLACK, scale = 0.4}
-                }
-              }
-            },
-            {
-              n=G.UIT.C,
-              config={align="cm",minh=1.5,minw=1.5,padding=0.05,r=0.1,hover=true,colour=G.C.WHITE,shadow=true},
-              nodes={
-                {
-                  n=G.UIT.T,
-                  config={text="4",colour=G.C.BLACK, scale = 0.4}
-                }
-              }
-            },
-            {
-              n=G.UIT.C,
-              config={align="cm",minh=1.5,minw=1.5,padding=0.05,r=0.1,hover=true,colour=G.C.WHITE,shadow=true},
-              nodes={
-                {
-                  n=G.UIT.T,
-                  config={text="5",colour=G.C.BLACK, scale = 0.4}
-                }
-              }
-            }
+            BG.UI.get_challenge_box(ch[1]),
+            BG.UI.get_challenge_box(ch[2]),
+            BG.UI.get_challenge_box(ch[3]),
+            BG.UI.get_challenge_box(ch[4]),
+            BG.UI.get_challenge_box(ch[5])
           }
       },
       {
         n=G.UIT.R,
-        config={align="tl",padding=0.1},nodes=
+        config={align="tl",padding=0.2},nodes=
           {
-            {
-              n=G.UIT.T,
-              config={text="6",colour=G.C.WHITE, scale = 0.4}
-            },
-            {
-              n=G.UIT.T,
-              config={text="7",colour=G.C.WHITE, scale = 0.4}
-            },
-            {
-              n=G.UIT.T,
-              config={text="8",colour=G.C.WHITE, scale = 0.4}
-            },
-            {
-              n=G.UIT.T,
-              config={text="9",colour=G.C.WHITE, scale = 0.4}
-            },
-            {
-              n=G.UIT.T,
-              config={text="10",colour=G.C.WHITE, scale = 0.4}
-            }
+            BG.UI.get_challenge_box(ch[6]),
+            BG.UI.get_challenge_box(ch[7]),
+            BG.UI.get_challenge_box(ch[8]),
+            BG.UI.get_challenge_box(ch[9]),
+            BG.UI.get_challenge_box(ch[10])
           }
       },
       {
         n=G.UIT.R,
-        config={align="tl",padding=0.1},nodes=
+        config={align="tl",padding=0.2},nodes=
           {
-            {
-              n=G.UIT.T,
-              config={text="11",colour=G.C.WHITE, scale = 0.4}
-            },
-            {
-              n=G.UIT.T,
-              config={text="12",colour=G.C.WHITE, scale = 0.4}
-            },
-            {
-              n=G.UIT.T,
-              config={text="13",colour=G.C.WHITE, scale = 0.4}
-            },
-            {
-              n=G.UIT.T,
-              config={text="14",colour=G.C.WHITE, scale = 0.4}
-            },
-            {
-              n=G.UIT.T,
-              config={text="15",colour=G.C.WHITE, scale = 0.4}
-            }
-        }
+            BG.UI.get_challenge_box(ch[11]),
+            BG.UI.get_challenge_box(ch[12]),
+            BG.UI.get_challenge_box(ch[13]),
+            BG.UI.get_challenge_box(ch[14]),
+            BG.UI.get_challenge_box(ch[15])
+          }
       },
       {
         n=G.UIT.R,
-        config={align="tl",padding=0.1},nodes=
+        config={align="tl",padding=0.2},nodes=
           {
-            {
-              n=G.UIT.T,
-              config={text="16",colour=G.C.WHITE, scale = 0.4}
-            },
-            {
-              n=G.UIT.T,
-              config={text="17",colour=G.C.WHITE, scale = 0.4}
-            },
-            {
-              n=G.UIT.T,
-              config={text="18",colour=G.C.WHITE, scale = 0.4}
-            },
-            {
-              n=G.UIT.T,
-              config={text="19",colour=G.C.WHITE, scale = 0.4}
-            },
-            {
-              n=G.UIT.T,
-              config={text="20",colour=G.C.WHITE, scale = 0.4}
-            }
-        }
+            BG.UI.get_challenge_box(ch[16]),
+            BG.UI.get_challenge_box(ch[17]),
+            BG.UI.get_challenge_box(ch[18]),
+            BG.UI.get_challenge_box(ch[19]),
+            BG.UI.get_challenge_box(ch[20])
+          }
       },
       {
         n=G.UIT.R,
-        config={align="tl",padding=0.1},nodes=
+        config={align="tl",padding=0.2},nodes=
           {
-            {
-              n=G.UIT.T,
-              config={text="21",colour=G.C.WHITE, scale = 0.4}
-            },
-            {
-              n=G.UIT.T,
-              config={text="22",colour=G.C.WHITE, scale = 0.4}
-            },
-            {
-              n=G.UIT.T,
-              config={text="23",colour=G.C.WHITE, scale = 0.4}
-            },
-            {
-              n=G.UIT.T,
-              config={text="24",colour=G.C.WHITE, scale = 0.4}
-            },
-            {
-              n=G.UIT.T,
-              config={text="25",colour=G.C.WHITE, scale = 0.4}
-            }
+            BG.UI.get_challenge_box(ch[21]),
+            BG.UI.get_challenge_box(ch[22]),
+            BG.UI.get_challenge_box(ch[23]),
+            BG.UI.get_challenge_box(ch[24]),
+            BG.UI.get_challenge_box(ch[25])
         }
       }
     }
