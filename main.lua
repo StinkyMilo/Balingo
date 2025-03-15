@@ -1,5 +1,6 @@
 if not BG then BG = {} end
 BG.bingo_active=true
+BG.challenges_generated=false
 BG.Progress = {}
 BG.Gameplay = {}
 BG.UI = {}
@@ -243,6 +244,10 @@ end
 
 function BG.UI.get_challenge_box(index)
   local children = {}
+  if not BG.challenges_generated then
+    BG.Gameplay.setup_challenges()
+    BG.challenges_generated=true
+  end
   sendTraceMessage("Got to " .. tostring(index), "BingoLog")
   local challenge = BG.Challenges[index]
   local progress = BG.Progress[challenge.name]
