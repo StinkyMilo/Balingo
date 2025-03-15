@@ -6,6 +6,7 @@
         "create_tabs",
         "localize",
         "create_UIBox_current_hands",
-        "SMODS"
+        "SMODS",
+        "check_for_unlock"
     ]
 }
