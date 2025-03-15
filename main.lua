@@ -248,7 +248,6 @@ function BG.UI.get_challenge_box(index)
     BG.Gameplay.setup_challenges()
     BG.challenges_generated=true
   end
-  sendTraceMessage("Got to " .. tostring(index), "BingoLog")
   local challenge = BG.Challenges[index]
   local progress = BG.Progress[challenge.name]
   local colour = progress.completed and G.C.GREEN or (progress.impossible and G.C.RED or G.C.BLACK)
@@ -373,10 +372,35 @@ function BG.UI.BoardDisplay()
   }
 end
 
+function BG.Gameplay.set_impossible(challenge_name)
+  BG.Progress[challenge_name].impossible=true
+end
+
+function BG.Gameplay.set_complete(challenge_name)
+  sendTraceMessage("Completed Challenge " .. challenge_name, "BingoLog")
+  BG.Progress[challenge_name].completed=true
+end
+
 local check_for_unlock_old = check_for_unlock
 -- When adding new things, add new types to check_for_unlock so all the logic stays together
 check_for_unlock = function(args)
   local ret = check_for_unlock_old(args)
-  
+  -- sendTraceMessage("Got to check_for_unlock","BingoLog")
+  if args.type=="hand_contents" then
+    -- sendTraceMessage("Got to hand_contents","BingoLog")
+    if #args.cards == 4 then
+      -- sendTraceMessage("Got to correct args.cards","BingoLog")
+      local all_eights=true
+      for j=1,#args.cards do
+        if args.cards[j]:get_id() ~= 8 then
+          all_eights=false
+        end
+      end
+      if all_eights then
+        ret=true
+        BG.Gameplay.set_complete("4 Eights")
+      end
+    end
+  end
   return ret
 end
