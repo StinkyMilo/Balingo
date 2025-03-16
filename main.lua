@@ -412,7 +412,6 @@ check_for_unlock = function(args)
         end
       end
       if all_eights then
-        ret=true
         BG.Gameplay.set_complete("4 Eights")
       end
     end
@@ -508,7 +507,7 @@ check_for_unlock = function(args)
     end
   end
   if args.type == "card_sold" then
-    if args.sell_cost >= 10 then
+    if args.cost >= 10 then
       BG.Gameplay.set_complete("Big Sale")
     end
   end
@@ -529,7 +528,7 @@ check_for_unlock = function(args)
     end
     if G.GAME.facing_blind then
       BG.Progress["Rising Power"].poker_hands_upgraded_this_round[args.hand]=BG.Progress["Rising Power"].poker_hands_upgraded_this_round[args.hand]+1
-      if BG.Progress[args.hand] >= 2 then
+      if BG.Progress["Rising Power"].poker_hands_upgraded_this_round[args.hand] >= 2 then
         BG.Gameplay.set_complete("Rising Power")
       end
     end
@@ -570,7 +569,7 @@ end
 
 local eval_card_old = eval_card
 function eval_card(card,context)
-  local result = eval_card_old(card,context)
+  local result, result2 = eval_card_old(card,context)
   local retriggers = 0
   if result and result.seals and result.seals.repetition then
     retriggers = retriggers + result.seals.repetition
@@ -579,7 +578,7 @@ function eval_card(card,context)
     retriggers = retriggers + result.jokers.repetition
   end
   check_for_unlock({type="retrigger",num_retriggers=retriggers})
-  return result
+  return result, result2
 end
 
 local sell_card_old = Card.sell_card
