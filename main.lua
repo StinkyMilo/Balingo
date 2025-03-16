@@ -207,7 +207,7 @@ BG.Challenges = {
     text=function() return {
       "Play a hand",
       "containing every",
-      "seal."
+      "type of seal."
     } end
   }
 }
@@ -457,6 +457,15 @@ check_for_unlock = function(args)
     if G.GAME.round_resets.ante <= 1 then
       BG.Gameplay.set_impossible("No Early Jokers")
     end
+    local rares = 0
+    for i = 1, #G.jokers.cards do
+        if G.jokers.cards[i].config.center.rarity == 3 then
+          rares = rares+1
+        end
+    end 
+    if rares >= 4 then
+      BG.Gameplay.set_complete("Rarity")
+    end
   end
   if args.type == 'win' then
     BG.Gameplay.set_complete("Win")
@@ -523,6 +532,11 @@ check_for_unlock = function(args)
       if BG.Progress[args.hand] >= 2 then
         BG.Gameplay.set_complete("Rising Power")
       end
+    end
+  end
+  if args.type == "chip_score" then
+    if args.chips >= 2000000 then
+      BG.Gameplay.set_complete("High Score")
     end
   end
   return ret
