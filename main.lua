@@ -373,7 +373,10 @@ function BG.UI.BoardDisplay()
 end
 
 function BG.Gameplay.set_impossible(challenge_name)
-  BG.Progress[challenge_name].impossible=true
+  if not BG.Progress[challenge_name].completed then
+    sendTraceMessage("Setting challenge " .. challenge_name .. " to impossible.","BingoLog")
+    BG.Progress[challenge_name].impossible=true
+  end
 end
 
 function BG.Gameplay.set_complete(challenge_name)
@@ -410,6 +413,32 @@ check_for_unlock = function(args)
       BG.Gameplay.set_complete("x4 Mult")
     end
   end
+  if args.type == 'modify_deck' then
+    if G.deck and G.deck.config.card_limit <= 35 then
+      BG.Gameplay.set_complete("Narrow Deck")
+    end
+    if G.deck and G.deck.config.card_limit >= 70 then
+      BG.Gameplay.set_complete("Big Deck")
+    end
+  end
+  if args.type == 'run_redeem' then
+    local _v = 0
+    _v = _v - (G.GAME.starting_voucher_count or 0)
+    for k, v in pairs(G.GAME.used_vouchers) do
+        _v = _v + 1
+    end
+    if G.GAME.round_resets.ante < 4 then
+      BG.Progress["Early Vouchers"] = _v
+      if _v >= 3 then
+        BG.Gameplay.set_complete("Early Vouchers")
+      end
+    end
+  end
+  if args.type == 'ante_up' then
+    if args.ante >= 4 then
+      BG.Gameplay.set_impossible("Early Vouchers")
+    end
+  end
   return ret
 end
 
@@ -423,10 +452,3 @@ function Card:calculate_joker (context)
   end
   return result
 end
-
--- local eval_card_old = eval_card
--- eval_card = function (card, context)
---   local ret = eval_card_old(card,context)
---   --Use this later. Nothing yet
---   return ret
--- end
