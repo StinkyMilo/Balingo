@@ -377,6 +377,7 @@ function BG.Gameplay.set_impossible(challenge_name)
 end
 
 function BG.Gameplay.set_complete(challenge_name)
+  -- TODO: Little animation or somethin' (but only if the challenge is active)
   sendTraceMessage("Completed Challenge " .. challenge_name, "BingoLog")
   BG.Progress[challenge_name].completed=true
 end
@@ -402,5 +403,30 @@ check_for_unlock = function(args)
       end
     end
   end
+  if args.type=="xmult_trigger" then
+    sendTraceMessage("Xmult Mod found with amount " .. tostring(args.amount),"BingoLog")
+    if args.amount>=4 then
+      sendTraceMessage("Xmult mod >=4","BingoLog")
+      BG.Gameplay.set_complete("x4 Mult")
+    end
+  end
   return ret
 end
+
+local calculate_joker_old = Card.calculate_joker
+function Card:calculate_joker (context)
+  local result = calculate_joker_old(self,context)
+  sendTraceMessage("Calculating Joker","BingoLog")
+  if result and result.Xmult_mod then
+    sendTraceMessage("Xmult mod found","BingoLog")
+    check_for_unlock({type="xmult_trigger",amount=result.Xmult_mod})
+  end
+  return result
+end
+
+-- local eval_card_old = eval_card
+-- eval_card = function (card, context)
+--   local ret = eval_card_old(card,context)
+--   --Use this later. Nothing yet
+--   return ret
+-- end

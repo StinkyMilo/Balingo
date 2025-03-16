@@ -7,6 +7,9 @@
         "localize",
         "create_UIBox_current_hands",
         "SMODS",
-        "check_for_unlock"
+        "check_for_unlock",
+        "eval_card",
+        "calculate_joker",
+        "Card"
     ]
 }
