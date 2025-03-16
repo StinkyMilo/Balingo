@@ -10,6 +10,8 @@
         "check_for_unlock",
         "eval_card",
         "calculate_joker",
-        "Card"
+        "Card",
+        "Blind",
+        "add_round_eval_row"
     ]
 }

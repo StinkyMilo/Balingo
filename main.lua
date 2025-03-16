@@ -51,17 +51,10 @@ BG.Challenges = {
   {
     name="No Early Jokers",
     text=function() return {
-      "Clear ante 2",
+      "Clear ante 1",
       "before obtaining",
       "any jokers."
-    } end,
-    setup=function ()
-      BG.Progress["No Early Jokers"].early_jokers_bought=false
-    end,
-    --If a condition could make this impossible in the current run, check here.
-    impossible=function()
-      return BG.Progress["No Early Jokers"].early_jokers_bought
-    end
+    } end
   },
   {
     name="Win",
@@ -80,8 +73,8 @@ BG.Challenges = {
     name="Retriggers",
     text=function() return {
       "Retrigger 5",
-      "cards in a",
-      "single hand."
+      "played cards in",
+      "a single hand."
     } end,
     setup=function ()
       BG.Progress["Retriggers"].retriggers_current_hand=0
@@ -153,19 +146,18 @@ BG.Challenges = {
     name="Pretty High Level",
     text=function() return {
       "Get a poker hand",
-      "to level 15."
+      "to level 12."
     } end
   },
   {
     name="Rising Power",
     text=function() return {
       "Upgrade the same",
-      "poker hand 3 times",
-      "in one round."
+      "poker hand twice",
+      "during a round."
     } end,
     setup=function ()
-      --TODO: Populate table with each type of hand
-      BG.Progress["Rising Power"].poker_hands_upgraded_this_round = {}
+      BG.Progress["Rising Power"].poker_hands_upgraded_this_round = BG.Gameplay.get_poker_hands_default()
     end
   },
   {
@@ -219,6 +211,23 @@ BG.Challenges = {
     } end
   }
 }
+
+function BG.Gameplay.get_poker_hands_default()
+  return {
+    ["Flush Five"] = 0,
+    ["Flush House"] = 0,
+    ["Five of a Kind"] = 0,
+    ["Straight Flush"] = 0,
+    ["Four of a Kind"] = 0,
+    ["Full House"] = 0,
+    ["Flush"] = 0,
+    ["Straight"] = 0,
+    ["Three of a Kind"] = 0,
+    ["Two Pair"] = 0,
+    ["Pair"] = 0,
+    ["High Card"] = 0
+  }
+end
 
 BG.Gameplay.active_challenges = {}
 
@@ -380,9 +389,11 @@ function BG.Gameplay.set_impossible(challenge_name)
 end
 
 function BG.Gameplay.set_complete(challenge_name)
-  -- TODO: Little animation or somethin' (but only if the challenge is active)
-  sendTraceMessage("Completed Challenge " .. challenge_name, "BingoLog")
-  BG.Progress[challenge_name].completed=true
+  if not BG.Progress[challenge_name].impossible then
+    -- TODO: Little animation or somethin' (but only if the challenge is active)
+    sendTraceMessage("Completed Challenge " .. challenge_name, "BingoLog")
+    BG.Progress[challenge_name].completed=true
+  end
 end
 
 local check_for_unlock_old = check_for_unlock
@@ -428,7 +439,7 @@ check_for_unlock = function(args)
         _v = _v + 1
     end
     if G.GAME.round_resets.ante < 4 then
-      BG.Progress["Early Vouchers"] = _v
+      BG.Progress["Early Vouchers"].num_early_vouchers = _v
       if _v >= 3 then
         BG.Gameplay.set_complete("Early Vouchers")
       end
@@ -437,6 +448,81 @@ check_for_unlock = function(args)
   if args.type == 'ante_up' then
     if args.ante >= 4 then
       BG.Gameplay.set_impossible("Early Vouchers")
+    end
+    if args.ante == 2 then
+      BG.Gameplay.set_complete("No Early Jokers")
+    end
+  end
+  if args.type == 'joker_added' then
+    if G.GAME.round_resets.ante <= 1 then
+      BG.Gameplay.set_impossible("No Early Jokers")
+    end
+  end
+  if args.type == 'win' then
+    BG.Gameplay.set_complete("Win")
+  end
+  if args.type == 'disable_blind' then
+    BG.Gameplay.set_complete("Disable Boss")
+  end
+  if args.type == 'hand' then
+    --Not sure if this is in the order I want but I think it'll work
+    BG.Progress["Retriggers"].retriggers_current_hand=0
+    -- A little weird but it'll work
+    if G.GAME.blind and not G.GAME.blind:get_type() == 'Boss' then
+      BG.Progress["Skip"].consecutive_blinds_skipped=0
+    end
+    if args.disp_text == "Royal Flush" then
+      BG.Gameplay.set_complete("Royal Flush")
+    end
+    if args.handname == 'Five of a Kind' then
+      BG.Gameplay.set_complete("Five of a Kind")
+    end
+  end
+  if args.type == 'retrigger' then
+    BG.Progress["Retriggers"].retriggers_current_hand = BG.Progress["Retriggers"].retriggers_current_hand + args.num_retriggers
+    if BG.Progress["Retriggers"].retriggers_current_hand >= 5 then
+      BG.Gameplay.set_complete("Retriggers")
+    end
+  end
+  if args.type == 'money' then
+    if G.GAME.dollars <= -15 then
+      BG.Gameplay.set_complete("Debt")
+    end
+    if G.GAME.dollars >= 150 then
+      BG.Gameplay.set_complete("Rich")
+    end
+  end
+  if args.type == 'blind_skipped' then
+    BG.Progress["Skip"].consecutive_blinds_skipped=BG.Progress["Skip"].consecutive_blinds_skipped+1
+    if BG.Progress["Skip"].consecutive_blinds_skipped >= 6 then
+      BG.Gameplay.set_complete("Skip")
+    end
+  end
+  if args.type == "card_sold" then
+    if args.sell_cost >= 10 then
+      BG.Gameplay.set_complete("Big Sale")
+    end
+  end
+  if args.type == "end_of_round_dollars" then
+    if args.dollars >= 25 then
+      BG.Gameplay.set_complete("Stocks")
+    end
+  end
+  if args.type == 'round_win' then
+    if G.GAME.current_round.hands_played == 1 and G.GAME.current_round.current_hand.handname == 'High Card' then
+      BG.Gameplay.set_complete("Single Tap")
+    end
+    BG.Progress["Rising Power"].poker_hands_upgraded_this_round = BG.Gameplay.get_poker_hands_default()
+  end
+  if args.type == "upgrade_hand" then
+    if args.level >= 12 then
+      BG.Gameplay.set_complete("Pretty High Level")
+    end
+    if G.GAME.facing_blind then
+      BG.Progress["Rising Power"].poker_hands_upgraded_this_round[args.hand]=BG.Progress["Rising Power"].poker_hands_upgraded_this_round[args.hand]+1
+      if BG.Progress[args.hand] >= 2 then
+        BG.Gameplay.set_complete("Rising Power")
+      end
     end
   end
   return ret
@@ -451,4 +537,56 @@ function Card:calculate_joker (context)
     check_for_unlock({type="xmult_trigger",amount=result.Xmult_mod})
   end
   return result
+end
+
+local add_to_deck_old = Card.add_to_deck
+function Card:add_to_deck (from_debuff)
+  local result = add_to_deck_old(self,from_debuff)
+  if not from_debuff and self.ability.set=='Joker' then
+    check_for_unlock({type="joker_added",card=self})
+  end
+  return result
+end
+
+local disable_blind_old = Blind.disable
+function Blind:disable()
+  disable_blind_old(self)
+  check_for_unlock({type="disable_blind"})
+end
+
+local eval_card_old = eval_card
+function eval_card(card,context)
+  local result = eval_card_old(card,context)
+  local retriggers = 0
+  if result and result.seals and result.seals.repetition then
+    retriggers = retriggers + result.seals.repetition
+  end
+  if result and result.jokers and result.jokers.repetition then
+    retriggers = retriggers + result.jokers.repetition
+  end
+  check_for_unlock({type="retrigger",num_retriggers=retriggers})
+  return result
+end
+
+local sell_card_old = Card.sell_card
+function Card:sell_card()
+  local ret = sell_card_old(self)
+  check_for_unlock({type="card_sold",cost=self.sell_cost})
+  return ret
+end
+
+local skip_blind_old = G.FUNCS.skip_blind
+G.FUNCS.skip_blind = function(e)
+  local result = skip_blind_old(e)
+  check_for_unlock({type="blind_skipped"})
+  return result
+end
+
+local add_round_eval_row_old = add_round_eval_row
+function add_round_eval_row(config)
+  local ret = add_round_eval_row_old(config)
+  if config.name == "bottom" and config.dollars then
+    check_for_unlock({type="end_of_round_dollars",dollars=config.dollars})
+  end
+  return ret
 end
