@@ -75,10 +75,7 @@ BG.Challenges = {
       "Retrigger 5",
       "played cards in",
       "a single hand."
-    } end,
-    setup=function ()
-      BG.Progress["Retriggers"].retriggers_current_hand=0
-    end
+    } end
   },
   {
     name="Debt",
@@ -177,17 +174,15 @@ BG.Challenges = {
     text=function() return {
       "Trigger 5 steel",
       "cards in one hand."
-    } end,
-    setup=function ()
-      BG.Progress["Steely"].steel_cards_triggered_current_hand=0
-    end
+    } end
   },
   {
     name="Lucky",
     text=function() return {
       "Trigger 10",
       "lucky cards.",
-      "(" .. tostring(BG.Progress["Lucky"].lucky_cards_triggered) .. " triggered so far.)"
+      "(" .. tostring(BG.Progress["Lucky"].lucky_cards_triggered) .. " triggered ",
+      "so far.)"
     } end,
     setup=function ()
       BG.Progress["Lucky"].lucky_cards_triggered=0
@@ -472,14 +467,27 @@ check_for_unlock = function(args)
   end
   if args.type == 'hand' then
     sendTraceMessage("Hand played","BingoLog")
-    --Not sure if this is in the order I want but I think it'll work
+
     local total_retriggers = 0
     for i=1,#args.scoring_hand do
-      total_retriggers=total_retriggers+BG.Gameplay.get_repetition_count(args.scoring_hand[i])
+      total_retriggers=total_retriggers+BG.Gameplay.get_repetition_count(args.scoring_hand[i],G.play)
     end
     if total_retriggers>=5 then
       BG.Gameplay.set_complete("Retriggers")
     end
+
+    local steel_triggers = 0
+    for i=1,#G.hand.cards do
+      local card = G.hand.cards[i]
+      local retriggers = BG.Gameplay.get_repetition_count(card,G.hand)
+      if card.config.center == G.P_CENTERS.m_steel then
+        steel_triggers = steel_triggers + 1 + retriggers
+      end
+    end
+    if steel_triggers >= 5 then
+      BG.Gameplay.set_complete("Steely")
+    end
+
     -- A little weird but it'll work
     if G.GAME.blind and G.GAME.blind:get_type() ~= 'Boss' then
       sendTraceMessage("Hand played on non-boss blind","BingoLog")
@@ -492,12 +500,6 @@ check_for_unlock = function(args)
       BG.Gameplay.set_complete("Five of a Kind")
     end
   end
-  -- if args.type == 'retrigger' then
-  --   BG.Progress["Retriggers"].retriggers_current_hand = BG.Progress["Retriggers"].retriggers_current_hand + args.num_retriggers
-  --   if BG.Progress["Retriggers"].retriggers_current_hand >= 5 then
-  --     BG.Gameplay.set_complete("Retriggers")
-  --   end
-  -- end
   if args.type == 'money' then
     if G.GAME.dollars <= -15 then
       BG.Gameplay.set_complete("Debt")
@@ -605,11 +607,11 @@ function add_round_eval_row(config)
   return ret
 end
 
-function BG.Gameplay.get_repetition_count(card)
+function BG.Gameplay.get_repetition_count(card,cardarea)
   local text,disp_text,poker_hands,scoring_hand,non_loc_disp_text = G.FUNCS.get_poker_hand_info(G.play.cards)
   local reps = {1}  
   --From Red seal
-  local eval = eval_card(card, {repetition_only = true,cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, repetition = true})
+  local eval = eval_card(card, {repetition_only = true,cardarea = cardarea, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, repetition = true})
   if next(eval) then 
       for h = 1, eval.seals.repetitions do
           reps[#reps+1] = eval
@@ -618,7 +620,7 @@ function BG.Gameplay.get_repetition_count(card)
   --From jokers
   for j=1, #G.jokers.cards do
       --calculate the joker effects
-      local eval = eval_card(G.jokers.cards[j], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = card, repetition = true})
+      local eval = eval_card(G.jokers.cards[j], {cardarea = cardarea, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = card, repetition = true})
       if next(eval) and eval.jokers then 
           for h = 1, eval.jokers.repetitions do
               reps[#reps+1] = eval
