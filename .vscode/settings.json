@@ -12,6 +12,7 @@
         "calculate_joker",
         "Card",
         "Blind",
-        "add_round_eval_row"
+        "add_round_eval_row",
+        "mod_chips"
     ]
 }

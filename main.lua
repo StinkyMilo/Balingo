@@ -192,7 +192,9 @@ BG.Challenges = {
     name="Chippy",
     text=function() return {
       "Get 500 chips",
-      "from one hand."
+      "from one hand.",
+      "(not counting",
+      "mult)."
     } end
   },
   {
@@ -472,6 +474,18 @@ check_for_unlock = function(args)
     for i=1,#args.scoring_hand do
       total_retriggers=total_retriggers+BG.Gameplay.get_repetition_count(args.scoring_hand[i],G.play)
     end
+    local seal_types = {}
+    local num_unique_seals = 0
+    for i=1,#args.full_hand do
+      local card = args.full_hand[i]
+      if card.seal and seal_types[card.seal] == nil then
+        seal_types[card.seal]=1
+        num_unique_seals = num_unique_seals + 1
+      end
+    end
+    if num_unique_seals >= 4 then
+      BG.Gameplay.set_complete("Seals")
+    end
     if total_retriggers>=5 then
       BG.Gameplay.set_complete("Retriggers")
     end
@@ -550,6 +564,11 @@ check_for_unlock = function(args)
     BG.Progress["Lucky"].lucky_cards_triggered = BG.Progress["Lucky"].lucky_cards_triggered+1
     if BG.Progress["Lucky"].lucky_cards_triggered >= 10 then
       BG.Gameplay.set_complete("Lucky")
+    end
+  end
+  if args.type == "chip_count" then
+    if args.chips >= 500 then
+      BG.Gameplay.set_complete("Chippy")
     end
   end
   return ret
@@ -634,4 +653,11 @@ function BG.Gameplay.get_repetition_count(card,cardarea)
       end
   end
   return #reps - 1
+end
+
+local mod_chips_old = mod_chips
+function mod_chips(chips)
+  local res = mod_chips_old(chips)
+  check_for_unlock({type="chip_count",chips=res})
+  return res
 end
