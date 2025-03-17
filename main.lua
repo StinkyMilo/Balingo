@@ -4,6 +4,7 @@ BG.challenges_generated=false
 BG.Progress = {}
 BG.Gameplay = {}
 BG.UI = {}
+BG.Util = {}
 BG.Challenges = {
   {
     name="4 Eights",
@@ -207,6 +208,31 @@ BG.Challenges = {
   }
 }
 
+-- Shuffles in-place
+BG.Util.shuffle = function(array)
+  for i=#array,2,-1 do
+    local j = pseudorandom("bingo",1,i)
+    array[i], array[j] = array[j], array[i]
+  end
+end
+
+BG.Util.slice = function(array,startInd,endInd)
+  local output = {}
+  for i=startInd,endInd do
+      output[#output+1]=array[i]
+      -- sendTraceMessage("Current value: " .. tostring(output[#output]),"BingoLog")
+  end
+  return output
+end
+
+BG.Util.range = function(startNum,endNum)
+  local output = {}
+  for i=startNum,endNum do
+    output[#output+1]=i
+  end
+  return output
+end
+
 function BG.Gameplay.get_poker_hands_default()
   return {
     ["Flush Five"] = 0,
@@ -227,8 +253,9 @@ end
 BG.Gameplay.active_challenges = {}
 
 function BG.Gameplay.get_challenges()
-  -- TODO: Shuffle then return first 25.
-  return {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25}
+  local list = BG.Util.range(1,#BG.Challenges)
+  BG.Util.shuffle(list)
+  return BG.Util.slice(list,1,25)
 end
 
 function BG.Gameplay.setup_challenges()
@@ -248,10 +275,6 @@ end
 
 function BG.UI.get_challenge_box(index)
   local children = {}
-  if not BG.challenges_generated then
-    BG.Gameplay.setup_challenges()
-    BG.challenges_generated=true
-  end
   local challenge = BG.Challenges[index]
   local progress = BG.Progress[challenge.name]
   local colour = progress.completed and G.C.GREEN or (progress.impossible and G.C.RED or G.C.BLACK)
@@ -432,7 +455,7 @@ check_for_unlock = function(args)
     for k, v in pairs(G.GAME.used_vouchers) do
         _v = _v + 1
     end
-    if G.GAME.round_resets.ante < 4 then
+    if G.GAME.round_resets.ante < 4 and BG.Progress["Early Vouchers"] ~= nil then
       BG.Progress["Early Vouchers"].num_early_vouchers = _v
       if _v >= 3 then
         BG.Gameplay.set_complete("Early Vouchers")
@@ -503,7 +526,7 @@ check_for_unlock = function(args)
     end
 
     -- A little weird but it'll work
-    if G.GAME.blind and G.GAME.blind:get_type() ~= 'Boss' then
+    if G.GAME.blind and G.GAME.blind:get_type() ~= 'Boss' and BG.Progress["Skip"] ~= nil then
       sendTraceMessage("Hand played on non-boss blind","BingoLog")
       BG.Progress["Skip"].consecutive_blinds_skipped=0
     end
@@ -522,7 +545,7 @@ check_for_unlock = function(args)
       BG.Gameplay.set_complete("Rich")
     end
   end
-  if args.type == 'blind_skipped' then
+  if args.type == 'blind_skipped' and BG.Progress["Skip"] ~= nil then
     BG.Progress["Skip"].consecutive_blinds_skipped=BG.Progress["Skip"].consecutive_blinds_skipped+1
     if BG.Progress["Skip"].consecutive_blinds_skipped >= 6 then
       BG.Gameplay.set_complete("Skip")
@@ -542,13 +565,15 @@ check_for_unlock = function(args)
     if G.GAME.current_round.hands_played == 1 and G.GAME.current_round.current_hand.handname == 'High Card' then
       BG.Gameplay.set_complete("Single Tap")
     end
-    BG.Progress["Rising Power"].poker_hands_upgraded_this_round = BG.Gameplay.get_poker_hands_default()
+    if BG.Progress["Rising Power"] ~= nil then
+      BG.Progress["Rising Power"].poker_hands_upgraded_this_round = BG.Gameplay.get_poker_hands_default()
+    end
   end
   if args.type == "upgrade_hand" then
     if args.level >= 12 then
       BG.Gameplay.set_complete("Pretty High Level")
     end
-    if G.GAME.facing_blind then
+    if G.GAME.facing_blind and BG.Progress["Rising Power"] ~= nil then
       BG.Progress["Rising Power"].poker_hands_upgraded_this_round[args.hand]=BG.Progress["Rising Power"].poker_hands_upgraded_this_round[args.hand]+1
       if BG.Progress["Rising Power"].poker_hands_upgraded_this_round[args.hand] >= 2 then
         BG.Gameplay.set_complete("Rising Power")
@@ -560,7 +585,7 @@ check_for_unlock = function(args)
       BG.Gameplay.set_complete("High Score")
     end
   end
-  if args.type == 'lucky_trigger' then
+  if args.type == 'lucky_trigger' and BG.Progress["Lucky"] ~= nil then
     BG.Progress["Lucky"].lucky_cards_triggered = BG.Progress["Lucky"].lucky_cards_triggered+1
     if BG.Progress["Lucky"].lucky_cards_triggered >= 10 then
       BG.Gameplay.set_complete("Lucky")
@@ -660,4 +685,12 @@ function mod_chips(chips)
   local res = mod_chips_old(chips)
   check_for_unlock({type="chip_count",chips=res})
   return res
+end
+
+local start_run_old = Game.start_run
+function Game:start_run(args)
+  local ret = start_run_old(self,args)
+  BG.Gameplay.setup_challenges()
+  BG.challenges_generated=true
+  return ret
 end
