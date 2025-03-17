@@ -90,10 +90,8 @@ BG.Challenges = {
   {
     name="Skip",
     text=function() return {
-      "Skip all small",
-      "and large blinds",
-      "for 3 consecutive",
-      "antes.",
+      "Skip 6 consecutive",
+      "non-boss blinds.",
       "(" .. tostring(BG.Progress["Skip"].consecutive_blinds_skipped) .. " skipped so far.)"
     } end,
     setup=function()
@@ -462,7 +460,7 @@ check_for_unlock = function(args)
           rares = rares+1
         end
     end 
-    if rares >= 4 then
+    if rares >= 3 and args.card.config.center.rarity == 3 then
       BG.Gameplay.set_complete("Rarity")
     end
   end
@@ -473,10 +471,18 @@ check_for_unlock = function(args)
     BG.Gameplay.set_complete("Disable Boss")
   end
   if args.type == 'hand' then
+    sendTraceMessage("Hand played","BingoLog")
     --Not sure if this is in the order I want but I think it'll work
-    BG.Progress["Retriggers"].retriggers_current_hand=0
+    local total_retriggers = 0
+    for i=1,#args.scoring_hand do
+      total_retriggers=total_retriggers+BG.Gameplay.get_repetition_count(args.scoring_hand[i])
+    end
+    if total_retriggers>=5 then
+      BG.Gameplay.set_complete("Retriggers")
+    end
     -- A little weird but it'll work
-    if G.GAME.blind and not G.GAME.blind:get_type() == 'Boss' then
+    if G.GAME.blind and G.GAME.blind:get_type() ~= 'Boss' then
+      sendTraceMessage("Hand played on non-boss blind","BingoLog")
       BG.Progress["Skip"].consecutive_blinds_skipped=0
     end
     if args.disp_text == "Royal Flush" then
@@ -486,12 +492,12 @@ check_for_unlock = function(args)
       BG.Gameplay.set_complete("Five of a Kind")
     end
   end
-  if args.type == 'retrigger' then
-    BG.Progress["Retriggers"].retriggers_current_hand = BG.Progress["Retriggers"].retriggers_current_hand + args.num_retriggers
-    if BG.Progress["Retriggers"].retriggers_current_hand >= 5 then
-      BG.Gameplay.set_complete("Retriggers")
-    end
-  end
+  -- if args.type == 'retrigger' then
+  --   BG.Progress["Retriggers"].retriggers_current_hand = BG.Progress["Retriggers"].retriggers_current_hand + args.num_retriggers
+  --   if BG.Progress["Retriggers"].retriggers_current_hand >= 5 then
+  --     BG.Gameplay.set_complete("Retriggers")
+  --   end
+  -- end
   if args.type == 'money' then
     if G.GAME.dollars <= -15 then
       BG.Gameplay.set_complete("Debt")
@@ -544,7 +550,7 @@ end
 local calculate_joker_old = Card.calculate_joker
 function Card:calculate_joker (context)
   local result = calculate_joker_old(self,context)
-  sendTraceMessage("Calculating Joker","BingoLog")
+  -- sendTraceMessage("Calculating Joker","BingoLog")
   if result and result.Xmult_mod then
     sendTraceMessage("Xmult mod found","BingoLog")
     check_for_unlock({type="xmult_trigger",amount=result.Xmult_mod})
@@ -567,19 +573,14 @@ function Blind:disable()
   check_for_unlock({type="disable_blind"})
 end
 
-local eval_card_old = eval_card
-function eval_card(card,context)
-  local result, result2 = eval_card_old(card,context)
-  local retriggers = 0
-  if result and result.seals and result.seals.repetition then
-    retriggers = retriggers + result.seals.repetition
-  end
-  if result and result.jokers and result.jokers.repetition then
-    retriggers = retriggers + result.jokers.repetition
-  end
-  check_for_unlock({type="retrigger",num_retriggers=retriggers})
-  return result, result2
-end
+-- local eval_card_old = eval_card
+-- function eval_card(card,context)
+--   local result, result2 = eval_card_old(card,context)
+--   if not context.repetition then
+--     sendTraceMessage("Repetition found","BingoLog")
+--   end
+--   return result, result2
+-- end
 
 local sell_card_old = Card.sell_card
 function Card:sell_card()
@@ -602,4 +603,27 @@ function add_round_eval_row(config)
     check_for_unlock({type="end_of_round_dollars",dollars=config.dollars})
   end
   return ret
+end
+
+function BG.Gameplay.get_repetition_count(card)
+  local text,disp_text,poker_hands,scoring_hand,non_loc_disp_text = G.FUNCS.get_poker_hand_info(G.play.cards)
+  local reps = {1}  
+  --From Red seal
+  local eval = eval_card(card, {repetition_only = true,cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, repetition = true})
+  if next(eval) then 
+      for h = 1, eval.seals.repetitions do
+          reps[#reps+1] = eval
+      end
+  end
+  --From jokers
+  for j=1, #G.jokers.cards do
+      --calculate the joker effects
+      local eval = eval_card(G.jokers.cards[j], {cardarea = G.play, full_hand = G.play.cards, scoring_hand = scoring_hand, scoring_name = text, poker_hands = poker_hands, other_card = card, repetition = true})
+      if next(eval) and eval.jokers then 
+          for h = 1, eval.jokers.repetitions do
+              reps[#reps+1] = eval
+          end
+      end
+  end
+  return #reps - 1
 end
