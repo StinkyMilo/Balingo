@@ -5,6 +5,8 @@ BG.Progress = {}
 BG.Gameplay = {}
 BG.UI = {}
 BG.Util = {}
+BG.Seed = {}
+local max_val = 100000
 BG.Challenges = {
   {
     name="4 Eights",
@@ -209,9 +211,11 @@ BG.Challenges = {
 }
 
 -- Shuffles in-place
-BG.Util.shuffle = function(array)
+-- ONLY TO BE USED FOR CHALLENGES
+BG.Util.shuffle = function(array,seed1,seed2)
+  math.randomseed(seed1,seed2)
   for i=#array,2,-1 do
-    local j = pseudorandom("bingo",1,i)
+    local j = math.random(i)
     array[i], array[j] = array[j], array[i]
   end
 end
@@ -253,8 +257,20 @@ end
 BG.Gameplay.active_challenges = {}
 
 function BG.Gameplay.get_challenges()
+  local seed1 = BG.Seed[1]
+  local seed2 = BG.Seed[2]
+  if seed1==nil or seed2 == nil then
+    seed1 = math.random(max_val)
+    seed2 = math.random(max_val)
+    sendTraceMessage("Generating seed as " .. tostring(seed1) .. ", " .. tostring(seed2),"BingoLog")
+    BG.Seed={seed1,seed2}
+  else
+    math.random(max_val)
+    math.random(max_val)
+    sendTraceMessage("Seed found as " .. tostring(seed1) .. ", " .. tostring(seed2),"BingoLog")
+  end
   local list = BG.Util.range(1,#BG.Challenges)
-  BG.Util.shuffle(list)
+  BG.Util.shuffle(list,seed1,seed2)
   return BG.Util.slice(list,1,25)
 end
 
@@ -263,13 +279,13 @@ function BG.Gameplay.setup_challenges()
   BG.Gameplay.active_challenges = {}
   for index, value in ipairs(challenge_numbers) do
     local challenge = BG.Challenges[value]
-    sendTraceMessage("Setting up progress for " .. challenge.name, "BalingoLog")
+    sendTraceMessage("Setting up progress for " .. challenge.name, "BingoLog")
     BG.Progress[challenge.name]={
       completed=false,
       impossible=false
     }
     if challenge.setup ~= nil then challenge.setup() end
-    BG.Gameplay.active_challenges[index]=challenge
+    BG.Gameplay.active_challenges[index]=value
   end
 end
 
@@ -335,7 +351,7 @@ function G.UIDEF.run_info()
 end
 
 function BG.UI.BoardDisplay()
-  local ch = BG.Gameplay.get_challenges()
+  local ch = BG.Gameplay.active_challenges
   return {
     n=G.UIT.ROOT, 
     config={align="tl", minw=3, padding = 0.1, r=0.1, color=G.C.CLEAR},
@@ -690,7 +706,22 @@ end
 local start_run_old = Game.start_run
 function Game:start_run(args)
   local ret = start_run_old(self,args)
+  local savetable = args.savetext or nil
+  if savetable and savetable.BINGO_SEED_1 ~= nil and savetable.BINGO_SEED_2 ~= nil then
+    BG.Seed[1] = savetable.BINGO_SEED_1
+    BG.Seed[2] = savetable.BINGO_SEED_2
+  else
+    BG.Seed = {}
+  end
   BG.Gameplay.setup_challenges()
   BG.challenges_generated=true
+  return ret
+end
+
+local save_run_old = save_run
+function save_run()
+  local ret = save_run_old()
+  G.ARGS.save_run["BINGO_SEED_1"]=BG.Seed[1]
+  G.ARGS.save_run["BINGO_SEED_2"]=BG.Seed[2]
   return ret
 end

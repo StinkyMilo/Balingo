@@ -15,6 +15,7 @@
         "add_round_eval_row",
         "mod_chips",
         "pseudorandom",
-        "Game"
+        "Game",
+        "save_run"
     ]
 }
