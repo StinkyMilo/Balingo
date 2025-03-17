@@ -546,6 +546,12 @@ check_for_unlock = function(args)
       BG.Gameplay.set_complete("High Score")
     end
   end
+  if args.type == 'lucky_trigger' then
+    BG.Progress["Lucky"].lucky_cards_triggered = BG.Progress["Lucky"].lucky_cards_triggered+1
+    if BG.Progress["Lucky"].lucky_cards_triggered >= 10 then
+      BG.Gameplay.set_complete("Lucky")
+    end
+  end
   return ret
 end
 
@@ -575,14 +581,14 @@ function Blind:disable()
   check_for_unlock({type="disable_blind"})
 end
 
--- local eval_card_old = eval_card
--- function eval_card(card,context)
---   local result, result2 = eval_card_old(card,context)
---   if not context.repetition then
---     sendTraceMessage("Repetition found","BingoLog")
---   end
---   return result, result2
--- end
+local eval_card_old = eval_card
+function eval_card(card,context)
+  local result, result2 = eval_card_old(card,context)
+  if not context.repetition_only and context.cardarea == G.play and card.lucky_trigger then
+    check_for_unlock({type="lucky_trigger",card=card})
+  end
+  return result, result2
+end
 
 local sell_card_old = Card.sell_card
 function Card:sell_card()
