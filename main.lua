@@ -1,12 +1,12 @@
 if not BG then BG = {} end
 BG.bingo_active=false
 BG.challenges_generated=false
-BG.bingo_seed_str=''
+BG.bingo_seed_str=nil
+BG.bingo_seed_entry_str=''
 BG.Progress = {}
 BG.Gameplay = {}
 BG.UI = {}
 BG.Util = {}
-BG.Seed = {}
 local max_val = 100000
 BG.Challenges = {
   {
@@ -257,19 +257,32 @@ end
 
 BG.Gameplay.active_challenges = {}
 
-function BG.Gameplay.get_challenges()
-  local seed1 = BG.Seed[1]
-  local seed2 = BG.Seed[2]
-  if seed1==nil or seed2 == nil then
-    seed1 = math.random(max_val)
-    seed2 = math.random(max_val)
-    sendTraceMessage("Generating seed as " .. tostring(seed1) .. ", " .. tostring(seed2),"BingoLog")
-    BG.Seed={seed1,seed2}
-  else
-    math.random(max_val)
-    math.random(max_val)
-    sendTraceMessage("Seed found as " .. tostring(seed1) .. ", " .. tostring(seed2),"BingoLog")
+local seed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
+function BG.Util.random_seed()
+  local seed_str = ""
+  for i=1,8 do
+    local index = math.random(string.len(seed_chars))
+    seed_chars = seed_chars .. string.sub(seed_chars,index,index)
   end
+  return seed_str
+end
+
+function BG.Util.numbers_from_seed(seed_str)
+  local first_half = pseudohash(string.sub(seed_str,1,4))
+  local second_half = pseudohash(string.sub(seed_str,5,8))
+  return first_half, second_half
+end
+
+function BG.Gameplay.get_challenges()
+  local seed_str = BG.bingo_seed_str
+  if seed_str == nil or seed_str == '' then
+    seed_str = BG.Util.random_seed()
+  else
+    for i=1,8 do
+      math.random()
+    end
+  end
+  local seed1, seed2 = BG.Util.numbers_from_seed(seed_str)
   local list = BG.Util.range(1,#BG.Challenges)
   BG.Util.shuffle(list,seed1,seed2)
   return BG.Util.slice(list,1,25)
@@ -708,11 +721,15 @@ local start_run_old = Game.start_run
 function Game:start_run(args)
   local ret = start_run_old(self,args)
   local savetable = args.savetext or nil
-  if savetable and savetable.BINGO_SEED_1 ~= nil and savetable.BINGO_SEED_2 ~= nil then
-    BG.Seed[1] = savetable.BINGO_SEED_1
-    BG.Seed[2] = savetable.BINGO_SEED_2
+  if BG.bingo_seed_entry_str ~= '' then
+    sendTraceMessage("Bingo Seed Entry Found " .. BG.bingo_seed_entry_str,"BingoLog")
+    BG.bingo_seed_str = BG.bingo_seed_entry_str
+  elseif savetable and savetable.BINGO_SEED ~= nil and savetable.BINGO_SEED ~= '' then
+    sendTraceMessage("Bingo Seed Found " .. savetable.BINGO_SEED,"BingoLog")
+    BG.bingo_seed_str = savetable.BINGO_SEED
   else
-    BG.Seed = {}
+    sendTraceMessage("Bingo Seed Not Found.","BingoLog")
+    BG.bingo_seed_str=nil
   end
   BG.Gameplay.setup_challenges()
   BG.challenges_generated=true
@@ -722,8 +739,7 @@ end
 local save_run_old = save_run
 function save_run()
   local ret = save_run_old()
-  G.ARGS.save_run["BINGO_SEED_1"]=BG.Seed[1]
-  G.ARGS.save_run["BINGO_SEED_2"]=BG.Seed[2]
+  G.ARGS.save_run["BINGO_SEED"]=BG.bingo_seed_str
   return ret
 end
 
@@ -734,14 +750,13 @@ function G.UIDEF.run_setup_option(type)
     type == 'New Run' and create_toggle{col = true, label = "Bingo", label_scale = 0.25, w = 0, scale = 0.7, ref_table = BG, ref_value = 'bingo_active'} or nil
   }})
   if type == 'New Run' then
+    local new_entry_value = {n=G.UIT.O, config={align = "cm", func = 'modify_bingo_run', object = Moveable()}, nodes={}}
     table.insert(old.nodes,3,
       {n=G.UIT.R, config={align = "cm", padding = 0.05, minh = 0.9}, nodes={
-        {n=G.UIT.O, config={align = "cm", func = 'modify_bingo_run', object = Moveable()}, nodes={
-        }},
+        new_entry_value
       }}
     )
   end
-
   return old
 end
 
@@ -750,7 +765,7 @@ function G.FUNCS.modify_bingo_run(e)
     e.config.object:remove()
     e.config.object = nil
   elseif not e.config.object and BG.bingo_active then
-    local input = create_text_input({max_length = 8, all_caps = true, ref_table = BG, ref_value = 'bingo_seed_str', prompt_text = "Bingo Seed",id='text_bingo_input'})
+    local input = create_text_input({max_length = 8, all_caps = true, ref_table = BG, ref_value = 'bingo_seed_entry_str', prompt_text = "Bingo Seed",id='text_bingo_input'})
     e.config.object = UIBox{
       definition = {n=G.UIT.ROOT, config={align = "cm", colour = G.C.CLEAR}, nodes={
         {n=G.UIT.C, config={align = "cm", minw = 0.1}, nodes={
