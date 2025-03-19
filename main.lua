@@ -8,6 +8,7 @@ BG.Progress = {}
 BG.Gameplay = {}
 BG.UI = {}
 BG.Util = {}
+BG.bingo_won=false
 BG.maintain_bingo=false
 local max_val = 100000
 BG.Challenges = {
@@ -294,17 +295,25 @@ function BG.Gameplay.get_challenges()
   return BG.Util.slice(list,1,25)
 end
 
-function BG.Gameplay.setup_challenges()
+function BG.Gameplay.setup_challenges(continuing_run)
   local challenge_numbers = BG.Gameplay.get_challenges()
   BG.Gameplay.active_challenges = {}
   for index, value in ipairs(challenge_numbers) do
     local challenge = BG.Challenges[value]
     sendTraceMessage("Setting up progress for " .. challenge.name, "BingoLog")
-    BG.Progress[challenge.name]={
-      completed=false,
-      impossible=false
-    }
-    if challenge.setup ~= nil then challenge.setup() end
+    if not continuing_run then
+      if BG.maintain_bingo then
+        BG.Progress[challenge.name].impossible=false
+      else
+        BG.Progress[challenge.name]={
+          completed=false,
+          impossible=false
+        }
+      end
+    end
+    if challenge.setup ~= nil and not continuing_run then 
+      challenge.setup()
+    end
     BG.Gameplay.active_challenges[index]=value
   end
 end
@@ -450,17 +459,90 @@ function BG.UI.BoardDisplay()
 end
 
 function BG.Gameplay.set_impossible(challenge_name)
+  if BG.bingo_won then return end
   if not BG.Progress[challenge_name].completed then
     sendTraceMessage("Setting challenge " .. challenge_name .. " to impossible.","BingoLog")
     BG.Progress[challenge_name].impossible=true
   end
 end
 
+function BG.Gameplay.check_for_win()
+  -- Check horizontal
+  for i=1,5 do
+    local all_complete = true
+    for j=1,5 do
+      local ind = (i-1)*5+j
+      local name = BG.Challenges[BG.Gameplay.active_challenges[ind]].name
+      sendTraceMessage("Checking location " .. tostring(ind) .. ", Name = " .. tostring(name) .. " for horizontal win.","BingoLog")
+      if not BG.Progress[name] or not BG.Progress[name].completed then
+        sendTraceMessage("Location " .. tostring(ind) .. " failed for horizontal win.","BingoLog")
+        all_complete=false
+        break
+      end
+    end
+    if all_complete then
+      return true
+    end
+  end
+
+  -- Check vertical
+  for i=1,5 do
+    local all_complete = true
+    for j=1,5 do
+      local ind = (j-1)*5+i
+      local name = BG.Challenges[ind].name
+      sendTraceMessage("Checking location " .. tostring(ind) .. ", Name = " .. tostring(name) .. " for vertical win.","BingoLog")
+      if not BG.Progress[name] or not BG.Progress[name].completed then
+        sendTraceMessage("Location " .. tostring(ind) .. " failed for vertical win.","BingoLog")
+        all_complete=false
+        break
+      end
+    end
+    if all_complete then
+      return true
+    end
+  end
+
+  -- Check diagonal 1
+  local all_complete=true
+  for i=1,5 do
+    local ind = (i-1)*5+i
+    local name = BG.Challenges[ind].name
+    sendTraceMessage("Checking location " .. tostring(ind) .. ", Name = " .. tostring(name) .. " for diagonal win 1.","BingoLog")
+    if not BG.Progress[name] or not BG.Progress[name].completed then
+      sendTraceMessage("Location " .. tostring(ind) .. " failed for diagonal win 1.","BingoLog")
+      all_complete=false
+      break
+    end
+  end
+  if all_complete then
+    return true
+  end
+
+  all_complete=true
+  for i=1,5 do
+    local ind = (i-1)*5+(6-i)
+    local name = BG.Challenges[ind].name
+    sendTraceMessage("Checking location " .. tostring(ind) .. ", Name = " .. tostring(name) .. " for diagonal win 2.","BingoLog")
+    if not BG.Progress[name] or not BG.Progress[name].completed then
+      sendTraceMessage("Location " .. tostring(ind) .. " failed for diagonal win 2.","BingoLog")
+      all_complete=false
+      break
+    end
+  end
+  return all_complete
+end
+
 function BG.Gameplay.set_complete(challenge_name)
+  if BG.bingo_won then return end
   if not BG.Progress[challenge_name].impossible then
     -- TODO: Little animation or somethin' (but only if the challenge is active)
     sendTraceMessage("Completed Challenge " .. challenge_name, "BingoLog")
     BG.Progress[challenge_name].completed=true
+    if BG.Gameplay.check_for_win() then
+      sendTraceMessage("Win found","BingoLog")
+      BG.Gameplay.show_win()
+    end
   end
 end
 
@@ -519,6 +601,9 @@ check_for_unlock = function(args)
     if args.ante == 2 then
       BG.Gameplay.set_complete("No Early Jokers")
     end
+    if args.ante == 9 then
+      BG.Gameplay.set_complete("Win")
+    end
   end
   if args.type == 'joker_added' then
     if G.GAME.round_resets.ante <= 1 then
@@ -533,9 +618,6 @@ check_for_unlock = function(args)
     if rares >= 3 and args.card.config.center.rarity == 3 then
       BG.Gameplay.set_complete("Rarity")
     end
-  end
-  if args.type == 'win' then
-    BG.Gameplay.set_complete("Win")
   end
   if args.type == 'disable_blind' then
     BG.Gameplay.set_complete("Disable Boss")
@@ -745,6 +827,8 @@ function Game:start_run(args)
     BG.bingo_active=BG.set_bingo_active or BG.maintain_bingo
   else
     BG.bingo_active=savetable.BINGO_SEED ~= nil or BG.maintain_bingo
+    BG.Progress=savetable.BINGO_PROGRESS
+    sendTraceMessage("Bingo Progress = " .. tostring(BG.Progress))
   end
   if BG.bingo_active then
     if not BG.maintain_bingo then
@@ -758,8 +842,8 @@ function Game:start_run(args)
         BG.bingo_seed_str=BG.Util.random_seed()
         sendTraceMessage("Bingo Seed Not Found. Setting to " .. BG.bingo_seed_str,"BingoLog")
       end
-      BG.Gameplay.setup_challenges()
     end
+    BG.Gameplay.setup_challenges(savetable ~= nil)
     BG.challenges_generated=true
   end
   return ret
@@ -769,6 +853,7 @@ local save_run_old = save_run
 function save_run()
   local ret = save_run_old()
   G.ARGS.save_run["BINGO_SEED"]=BG.bingo_seed_str
+  G.ARGS.save_run["BINGO_PROGRESS"]=BG.Progress
   return ret
 end
 
@@ -873,4 +958,20 @@ function TRANSPOSE_TEXT_INPUT(amount)
   text.current_position = math.min(position_child-1, string.len(text.ref_table[text.ref_value]))
   hook.UIBox:recalculate(true)
   text.ref_table[text.ref_value] = GET_TEXT_FROM_INPUT()
+end
+
+function BG.Gameplay.show_win()
+  G.E_MANAGER:add_event(Event({
+    trigger = 'immediate',
+    blocking = false,
+    blockable = false,
+    func = (function()
+        if G.STATE == G.STATES.ROUND_EVAL then 
+            win_game()
+            G.GAME.won = true
+            BG.bingo_won=true
+            return true
+        end
+    end)
+}))
 end
