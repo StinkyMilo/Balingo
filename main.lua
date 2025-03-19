@@ -1,4 +1,5 @@
 if not BG then BG = {} end
+BG.set_bingo_active=false
 BG.bingo_active=false
 BG.challenges_generated=false
 BG.bingo_seed_str=nil
@@ -257,17 +258,20 @@ end
 
 BG.Gameplay.active_challenges = {}
 
-local seed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
+local seed_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 function BG.Util.random_seed()
   local seed_str = ""
   for i=1,8 do
     local index = math.random(string.len(seed_chars))
-    seed_chars = seed_chars .. string.sub(seed_chars,index,index)
+    seed_str = seed_str .. string.sub(seed_chars,index,index)
   end
   return seed_str
 end
 
 function BG.Util.numbers_from_seed(seed_str)
+  while string.len(seed_str) < 8 do
+    seed_str = "0"..seed_str
+  end
   local first_half = pseudohash(string.sub(seed_str,1,4))
   local second_half = pseudohash(string.sub(seed_str,5,8))
   return first_half, second_half
@@ -277,6 +281,7 @@ function BG.Gameplay.get_challenges()
   local seed_str = BG.bingo_seed_str
   if seed_str == nil or seed_str == '' then
     seed_str = BG.Util.random_seed()
+    BG.bingo_seed_str=seed_str
   else
     for i=1,8 do
       math.random()
@@ -370,60 +375,74 @@ function BG.UI.BoardDisplay()
     n=G.UIT.ROOT, 
     config={align="tl", minw=3, padding = 0.1, r=0.1, color=G.C.CLEAR},
     nodes={
-      {
-        n=G.UIT.R,
-        config={align="tl",padding=0.2},nodes=
-          {
-            BG.UI.get_challenge_box(ch[1]),
-            BG.UI.get_challenge_box(ch[2]),
-            BG.UI.get_challenge_box(ch[3]),
-            BG.UI.get_challenge_box(ch[4]),
-            BG.UI.get_challenge_box(ch[5])
+      {n=G.UIT.C,config={align="tl",padding=0.1},nodes={
+        {
+          n=G.UIT.R,
+          config={align="tm",padding=0},nodes={
+            {
+              n=G.UIT.T,
+              config={align="tm",text="Seed: " .. BG.bingo_seed_str,colour=G.C.WHITE,scale=0.35},
+              nodes={}
+            }
           }
-      },
-      {
-        n=G.UIT.R,
-        config={align="tl",padding=0.2},nodes=
+        },
+        {n=G.UIT.R,config={align="tl",padding=0.1},nodes={
           {
-            BG.UI.get_challenge_box(ch[6]),
-            BG.UI.get_challenge_box(ch[7]),
-            BG.UI.get_challenge_box(ch[8]),
-            BG.UI.get_challenge_box(ch[9]),
-            BG.UI.get_challenge_box(ch[10])
+            n=G.UIT.R,
+            config={align="tl",padding=0.1},nodes=
+              {
+                BG.UI.get_challenge_box(ch[1]),
+                BG.UI.get_challenge_box(ch[2]),
+                BG.UI.get_challenge_box(ch[3]),
+                BG.UI.get_challenge_box(ch[4]),
+                BG.UI.get_challenge_box(ch[5])
+              }
+          },
+          {
+            n=G.UIT.R,
+            config={align="tl",padding=0.1},nodes=
+              {
+                BG.UI.get_challenge_box(ch[6]),
+                BG.UI.get_challenge_box(ch[7]),
+                BG.UI.get_challenge_box(ch[8]),
+                BG.UI.get_challenge_box(ch[9]),
+                BG.UI.get_challenge_box(ch[10])
+              }
+          },
+          {
+            n=G.UIT.R,
+            config={align="tl",padding=0.1},nodes=
+              {
+                BG.UI.get_challenge_box(ch[11]),
+                BG.UI.get_challenge_box(ch[12]),
+                BG.UI.get_challenge_box(ch[13]),
+                BG.UI.get_challenge_box(ch[14]),
+                BG.UI.get_challenge_box(ch[15])
+              }
+          },
+          {
+            n=G.UIT.R,
+            config={align="tl",padding=0.1},nodes=
+              {
+                BG.UI.get_challenge_box(ch[16]),
+                BG.UI.get_challenge_box(ch[17]),
+                BG.UI.get_challenge_box(ch[18]),
+                BG.UI.get_challenge_box(ch[19]),
+                BG.UI.get_challenge_box(ch[20])
+              }
+          },
+          {
+            n=G.UIT.R,
+            config={align="tl",padding=0.1},nodes=
+              {
+                BG.UI.get_challenge_box(ch[21]),
+                BG.UI.get_challenge_box(ch[22]),
+                BG.UI.get_challenge_box(ch[23]),
+                BG.UI.get_challenge_box(ch[24]),
+                BG.UI.get_challenge_box(ch[25])
+            }
           }
-      },
-      {
-        n=G.UIT.R,
-        config={align="tl",padding=0.2},nodes=
-          {
-            BG.UI.get_challenge_box(ch[11]),
-            BG.UI.get_challenge_box(ch[12]),
-            BG.UI.get_challenge_box(ch[13]),
-            BG.UI.get_challenge_box(ch[14]),
-            BG.UI.get_challenge_box(ch[15])
-          }
-      },
-      {
-        n=G.UIT.R,
-        config={align="tl",padding=0.2},nodes=
-          {
-            BG.UI.get_challenge_box(ch[16]),
-            BG.UI.get_challenge_box(ch[17]),
-            BG.UI.get_challenge_box(ch[18]),
-            BG.UI.get_challenge_box(ch[19]),
-            BG.UI.get_challenge_box(ch[20])
-          }
-      },
-      {
-        n=G.UIT.R,
-        config={align="tl",padding=0.2},nodes=
-          {
-            BG.UI.get_challenge_box(ch[21]),
-            BG.UI.get_challenge_box(ch[22]),
-            BG.UI.get_challenge_box(ch[23]),
-            BG.UI.get_challenge_box(ch[24]),
-            BG.UI.get_challenge_box(ch[25])
-        }
+        }}}
       }
     }
   }
@@ -721,18 +740,25 @@ local start_run_old = Game.start_run
 function Game:start_run(args)
   local ret = start_run_old(self,args)
   local savetable = args.savetext or nil
-  if BG.bingo_seed_entry_str ~= '' then
-    sendTraceMessage("Bingo Seed Entry Found " .. BG.bingo_seed_entry_str,"BingoLog")
-    BG.bingo_seed_str = BG.bingo_seed_entry_str
-  elseif savetable and savetable.BINGO_SEED ~= nil and savetable.BINGO_SEED ~= '' then
-    sendTraceMessage("Bingo Seed Found " .. savetable.BINGO_SEED,"BingoLog")
-    BG.bingo_seed_str = savetable.BINGO_SEED
+  if savetable == nil then
+    BG.bingo_active=BG.set_bingo_active
   else
-    sendTraceMessage("Bingo Seed Not Found.","BingoLog")
-    BG.bingo_seed_str=nil
+    BG.bingo_active=savetable.BINGO_SEED ~= nil
   end
-  BG.Gameplay.setup_challenges()
-  BG.challenges_generated=true
+  if BG.bingo_active then
+    if savetable and savetable.BINGO_SEED ~= nil and savetable.BINGO_SEED ~= '' then
+      sendTraceMessage("Bingo Seed Found " .. savetable.BINGO_SEED,"BingoLog")
+      BG.bingo_seed_str = savetable.BINGO_SEED
+    elseif BG.bingo_seed_entry_str ~= '' and BG.bingo_seed_entry_str~=nil then
+      sendTraceMessage("Bingo Seed Entry Found " .. BG.bingo_seed_entry_str,"BingoLog")
+      BG.bingo_seed_str = BG.bingo_seed_entry_str
+    else
+      BG.bingo_seed_str=BG.Util.random_seed()
+      sendTraceMessage("Bingo Seed Not Found. Setting to " .. BG.bingo_seed_str,"BingoLog")
+    end
+    BG.Gameplay.setup_challenges()
+    BG.challenges_generated=true
+  end
   return ret
 end
 
@@ -746,8 +772,9 @@ end
 local run_setup_option_old = G.UIDEF.run_setup_option
 function G.UIDEF.run_setup_option(type)
   local old = run_setup_option_old(type)
+  BG.set_bingo_active=false
   table.insert(old.nodes[4].nodes[3].nodes,{n=G.UIT.C, config={align = "cm", minw = 2.4, id = 'toggle_bingo_active'}, nodes={
-    type == 'New Run' and create_toggle{col = true, label = "Bingo", label_scale = 0.25, w = 0, scale = 0.7, ref_table = BG, ref_value = 'bingo_active'} or nil
+    type == 'New Run' and create_toggle{col = true, label = "Bingo", label_scale = 0.25, w = 0, scale = 0.7, ref_table = BG, ref_value = 'set_bingo_active'} or nil
   }})
   if type == 'New Run' then
     local new_entry_value = {n=G.UIT.O, config={align = "cm", func = 'modify_bingo_run', object = Moveable()}, nodes={}}
@@ -760,32 +787,32 @@ function G.UIDEF.run_setup_option(type)
   return old
 end
 
-function G.FUNCS.modify_bingo_run(e)
-  if e.config.object and not BG.bingo_active then
-    e.config.object:remove()
-    e.config.object = nil
-  elseif not e.config.object and BG.bingo_active then
-    local input = create_text_input({max_length = 8, all_caps = true, ref_table = BG, ref_value = 'bingo_seed_entry_str', prompt_text = "Bingo Seed",id='text_bingo_input'})
-    e.config.object = UIBox{
-      definition = {n=G.UIT.ROOT, config={align = "cm", colour = G.C.CLEAR}, nodes={
-        {n=G.UIT.C, config={align = "cm", minw = 0.1}, nodes={
-          input,
-          {n=G.UIT.C, config={align = "cm", minw = 0.1}, nodes={}},
-          UIBox_button({label = localize('ml_paste_seed'),minw = 1, minh = 0.6, button = 'paste_bingo_seed', colour = G.C.BLUE, scale = 0.3, col = true})
-        }},
-
-        {n=G.UIT.C, config={align = "cm", minw = 2.5}, nodes={
-        }},
+function BG.UI.get_text_entry(parent)
+  BG.bingo_seed_entry_str = BG.Util.random_seed()
+  local input = create_text_input({max_length = 8, all_caps = true, ref_table = BG, ref_value = 'bingo_seed_entry_str', prompt_text = "Bingo Seed",id='text_bingo_input'})
+  return UIBox{
+    definition = {n=G.UIT.ROOT, config={align = "cm", colour = G.C.CLEAR}, nodes={
+      {n=G.UIT.C, config={align = "cm", minw = 0.1}, nodes={
+        input,
+        {n=G.UIT.C, config={align = "cm", minw = 0.1}, nodes={}},
+        UIBox_button({label = localize('ml_paste_seed'),minw = 1, minh = 0.6, button = 'paste_bingo_seed', colour = G.C.BLUE, scale = 0.3, col = true})
       }},
-      config = {offset = {x=0,y=0}, parent = e, type = 'cm'}
-    }
-    e.config.object:recalculate()
-  end
+
+      {n=G.UIT.C, config={align = "cm", minw = 2.5}, nodes={
+      }},
+    }},
+    config = {offset = {x=0,y=0}, parent = parent, type = 'cm'}
+  }
 end
 
-function BG.toggle_bingo_active()
-  sendTraceMessage("Bingo: " .. tostring(BG.bingo_active),"BingoLog")
-  BG.bingo_active = not BG.bingo_active
+function G.FUNCS.modify_bingo_run(e)
+  if e.config.object and not BG.set_bingo_active then
+    e.config.object:remove()
+    e.config.object = nil
+  elseif not e.config.object and BG.set_bingo_active then
+    e.config.object = BG.UI.get_text_entry(e)
+    e.config.object:recalculate()
+  end
 end
 
 G.FUNCS.paste_bingo_seed = function(e)
@@ -811,13 +838,13 @@ function TRANSPOSE_TEXT_INPUT(amount)
   local position_child = nil
   local hook = G.CONTROLLER.text_input_hook
   local text = G.CONTROLLER.text_input_hook.config.ref_table.text
-  sendTraceMessage('[[TRANSPOSE]] Text input hook is ' .. tostring(hook),'BingoLog')
-  sendTraceMessage('[[TRANSPOSE]] Text input text is ' .. tostring(text),'BingoLog')
+  -- sendTraceMessage('[[TRANSPOSE]] Text input hook is ' .. tostring(hook),'BingoLog')
+  -- sendTraceMessage('[[TRANSPOSE]] Text input text is ' .. tostring(text),'BingoLog')
   for i = 1, #hook.children do
-    sendTraceMessage('[[TRANSPOSE]] Child config is ' .. tostring(hook.children[i].config),'BingoLog')
+    -- sendTraceMessage('[[TRANSPOSE]] Child config is ' .. tostring(hook.children[i].config),'BingoLog')
     if hook.children[i].config then
-      sendTraceMessage('[[TRANSPOSE]] Child ID is ' .. tostring(hook.children[i].config.id),'BingoLog')
-      sendTraceMessage('[[TRANSPOSE]] Looking for ID ' .. tostring(G.CONTROLLER.text_input_id .. '_position'),'BingoLog')
+      -- sendTraceMessage('[[TRANSPOSE]] Child ID is ' .. tostring(hook.children[i].config.id),'BingoLog')
+      -- sendTraceMessage('[[TRANSPOSE]] Looking for ID ' .. tostring(G.CONTROLLER.text_input_id .. '_position'),'BingoLog')
      if hook.children[i].config.id == G.CONTROLLER.text_input_id..'_position' then
         position_child = i; break
       end
