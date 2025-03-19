@@ -8,6 +8,7 @@ BG.Progress = {}
 BG.Gameplay = {}
 BG.UI = {}
 BG.Util = {}
+BG.maintain_bingo=false
 local max_val = 100000
 BG.Challenges = {
   {
@@ -741,22 +742,24 @@ function Game:start_run(args)
   local ret = start_run_old(self,args)
   local savetable = args.savetext or nil
   if savetable == nil then
-    BG.bingo_active=BG.set_bingo_active
+    BG.bingo_active=BG.set_bingo_active or BG.maintain_bingo
   else
-    BG.bingo_active=savetable.BINGO_SEED ~= nil
+    BG.bingo_active=savetable.BINGO_SEED ~= nil or BG.maintain_bingo
   end
   if BG.bingo_active then
-    if savetable and savetable.BINGO_SEED ~= nil and savetable.BINGO_SEED ~= '' then
-      sendTraceMessage("Bingo Seed Found " .. savetable.BINGO_SEED,"BingoLog")
-      BG.bingo_seed_str = savetable.BINGO_SEED
-    elseif BG.bingo_seed_entry_str ~= '' and BG.bingo_seed_entry_str~=nil then
-      sendTraceMessage("Bingo Seed Entry Found " .. BG.bingo_seed_entry_str,"BingoLog")
-      BG.bingo_seed_str = BG.bingo_seed_entry_str
-    else
-      BG.bingo_seed_str=BG.Util.random_seed()
-      sendTraceMessage("Bingo Seed Not Found. Setting to " .. BG.bingo_seed_str,"BingoLog")
+    if not BG.maintain_bingo then
+      if savetable and savetable.BINGO_SEED ~= nil and savetable.BINGO_SEED ~= '' then
+        sendTraceMessage("Bingo Seed Found " .. savetable.BINGO_SEED,"BingoLog")
+        BG.bingo_seed_str = savetable.BINGO_SEED
+      elseif BG.bingo_seed_entry_str ~= '' and BG.bingo_seed_entry_str~=nil then
+        sendTraceMessage("Bingo Seed Entry Found " .. BG.bingo_seed_entry_str,"BingoLog")
+        BG.bingo_seed_str = BG.bingo_seed_entry_str
+      else
+        BG.bingo_seed_str=BG.Util.random_seed()
+        sendTraceMessage("Bingo Seed Not Found. Setting to " .. BG.bingo_seed_str,"BingoLog")
+      end
+      BG.Gameplay.setup_challenges()
     end
-    BG.Gameplay.setup_challenges()
     BG.challenges_generated=true
   end
   return ret
@@ -773,9 +776,14 @@ local run_setup_option_old = G.UIDEF.run_setup_option
 function G.UIDEF.run_setup_option(type)
   local old = run_setup_option_old(type)
   BG.set_bingo_active=false
-  table.insert(old.nodes[4].nodes[3].nodes,{n=G.UIT.C, config={align = "cm", minw = 2.4, id = 'toggle_bingo_active'}, nodes={
-    type == 'New Run' and create_toggle{col = true, label = "Bingo", label_scale = 0.25, w = 0, scale = 0.7, ref_table = BG, ref_value = 'set_bingo_active'} or nil
-  }})
+  local new_node = {n=G.UIT.C, config={align = "cm", minw = 2.4, id = 'toggle_bingo_active'}, nodes={}}
+  if type == 'New Run' then
+    table.insert(new_node.nodes,create_toggle{col = true, label = "Bingo", label_scale = 0.25, w = 0, scale = 0.7, ref_table = BG, ref_value = 'set_bingo_active'})
+    if BG.bingo_active then
+      table.insert(new_node.nodes,create_toggle{col=true,label='Continue Bingo',label_scale=0.25,w=0,scale=0.7,ref_table=BG,ref_value='maintain_bingo'})
+    end
+  end
+  table.insert(old.nodes[4].nodes[3].nodes,new_node)
   if type == 'New Run' then
     local new_entry_value = {n=G.UIT.O, config={align = "cm", func = 'modify_bingo_run', object = Moveable()}, nodes={}}
     table.insert(old.nodes,3,
