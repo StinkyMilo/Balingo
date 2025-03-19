@@ -16,6 +16,7 @@
         "mod_chips",
         "pseudorandom",
         "Game",
-        "save_run"
+        "save_run",
+        "create_toggle"
     ]
 }
