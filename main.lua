@@ -112,7 +112,7 @@ BG.Challenges = {
     name="Big Sale",
     text=function() return {
       "Sell a joker",
-      "for $10 or more."
+      "for $9 or more."
     } end
   },
   {
@@ -635,7 +635,7 @@ function BG.Gameplay.check_for_win()
     local all_complete = true
     for j=1,5 do
       local ind = (j-1)*5+i
-      local name = BG.Challenges[ind].name
+      local name = BG.Challenges[BG.Gameplay.active_challenges[ind]].name
       sendTraceMessage("Checking location " .. tostring(ind) .. ", Name = " .. tostring(name) .. " for vertical win.","BingoLog")
       if not BG.Progress[name] or not BG.Progress[name].completed then
         sendTraceMessage("Location " .. tostring(ind) .. " failed for vertical win.","BingoLog")
@@ -652,7 +652,7 @@ function BG.Gameplay.check_for_win()
   local all_complete=true
   for i=1,5 do
     local ind = (i-1)*5+i
-    local name = BG.Challenges[ind].name
+    local name = BG.Challenges[BG.Gameplay.active_challenges[ind]].name
     sendTraceMessage("Checking location " .. tostring(ind) .. ", Name = " .. tostring(name) .. " for diagonal win 1.","BingoLog")
     if not BG.Progress[name] or not BG.Progress[name].completed then
       sendTraceMessage("Location " .. tostring(ind) .. " failed for diagonal win 1.","BingoLog")
@@ -667,7 +667,7 @@ function BG.Gameplay.check_for_win()
   all_complete=true
   for i=1,5 do
     local ind = (i-1)*5+(6-i)
-    local name = BG.Challenges[ind].name
+    local name = BG.Challenges[BG.Gameplay.active_challenges[ind]].name
     sendTraceMessage("Checking location " .. tostring(ind) .. ", Name = " .. tostring(name) .. " for diagonal win 2.","BingoLog")
     if not BG.Progress[name] or not BG.Progress[name].completed then
       sendTraceMessage("Location " .. tostring(ind) .. " failed for diagonal win 2.","BingoLog")
@@ -850,7 +850,7 @@ check_for_unlock = function(args)
     end
   end
   if args.type == "card_sold" then
-    if args.cost >= 10 then
+    if args.cost >= 6 then
       BG.Gameplay.set_complete("Big Sale")
     end
   end
