@@ -866,13 +866,13 @@ check_for_unlock = function(args)
     if BG.Progress["Rising Power"] ~= nil then
       BG.Progress["Rising Power"].poker_hands_upgraded_this_round = BG.Gameplay.get_poker_hands_default()
     end
-    if G.GAME.round_resets.ante == 5 then
+    if BG.Progress["Faceless 5"] ~= nil and G.GAME.round_resets.ante == 5 then
       BG.Progress["Faceless 5"].ante_5_blinds = BG.Progress["Faceless 5"].ante_5_blinds + 1
       if BG.Progress["Faceless 5"].ante_5_blinds >= 3 then
         BG.Gameplay.set_complete("Faceless 5")
       end
     end
-    if G.GAME.round_resets.ante == 6 then
+    if BG.Progress["Heartless 6"] ~= nil and G.GAME.round_resets.ante == 6 then
       BG.Progress["Heartless 6"].ante_6_blinds = BG.Progress["Heartless 6"].ante_6_blinds + 1
       if BG.Progress["Heartless 6"].ante_6_blinds >= 3 then
         BG.Gameplay.set_complete("Heartless 6")
@@ -907,7 +907,7 @@ check_for_unlock = function(args)
     end
   end
   if args.type == "money_mod" then
-    if args.mod < 0 and G.shop then
+    if BG.Progress["Big Purchase"] ~= nil and args.mod < 0 and G.shop then
       BG.Progress["Big Purchase"].money_spent_current_shop=BG.Progress["Big Purchase"].money_spent_current_shop-args.mod
       if BG.Progress["Big Purchase"].money_spent_current_shop >= 50 then
         BG.Gameplay.set_complete("Big Purchase")
@@ -915,7 +915,9 @@ check_for_unlock = function(args)
     end
   end
   if args.type == "shop_entered" then
-    BG.Progress["Big Purchase"].money_spent_current_shop=0
+    if BG.Progress["Big Purchase"] ~= nil then
+      BG.Progress["Big Purchase"].money_spent_current_shop=0
+    end
   end
   return ret
 end
