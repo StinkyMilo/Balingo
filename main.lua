@@ -227,8 +227,8 @@ BG.Challenges = {
   {
     name="Faceless 5",
     text=function() return{
-      "Beat all 3 blinds",
-      "of ante 5 without",
+      "Beat 3 blinds in",
+      "ante 5 without",
       "playing any face",
       "cards."
     } end,
@@ -239,8 +239,8 @@ BG.Challenges = {
   {
     name="Heartless 6",
     text=function() return{
-      "Beat all 3 blinds",
-      "of ante 6 without",
+      "Beat 3 blinds in",
+      "ante 6 without",
       "playing any heart",
       "cards."
     } end,
@@ -262,100 +262,100 @@ BG.Challenges = {
       "ante 5."
     } end
   },
-  {
-    name="Sequence",
-    text=function() return{
-      "Beat a blind by",
-      "playing a high card,",
-      "then a pair, then a",
-      "three of a kind."
-    } end,
-    setup = function()
-      BG.Progress["Sequence"].hand_progress=0
-    end
-  },
-  {
-    name="Precision",
-    text=function() return{
-      "Beat the boss blind",
-      "of ante 4 on the",
-      "15th hand of the run.",
-      "(" .. tostring(G.GAME.hands_played) .. " hands played",
-      "so far)."
-    } end
-  },
-  {
-    name="Clearance",
-    text=function() return{
-      "Sell 3 jokers",
-      "during a blind,",
-      "then beat it.",
-      "(" .. tostring(BG.Progress["Clearance"].jokers_sold_this_blind) .. " jokers sold",
-      "this blind.)"
-    } end,
-    setup=function()
-      BG.Progress["Clearance"].jokers_sold_this_blind=0
-    end
-  },
-  {
-    name="Nevermind",
-    text=function() return{
-      "Skip 2 booster",
-      "packs in a",
-      "single shop."
-    } end,
-    setup=function()
-      BG.Progress["Nevermind"].booster_packs_skipped_this_shop=0
-    end
-  },
-  {
-    name="Creation",
-    text=function() return{
-      "Create 6 jokers",
-      "through means",
-      "other than buying.",
-      "(" .. tostring(BG.Progress["Creation"].jokers_created) .. " created",
-      "so far.)"
-    } end,
-    setup=function()
-      BG.Progress["Creation"].jokers_created=0
-    end
-  },
-  {
-    name="Wheel of Fortune",
-    text=function() return{
-      "Successfully add",
-      "an edition to a",
-      "joker using",
-      "Wheel of Fortune."
-    }end
-  },
-  {
-    name="Joker",
-    text=function() return{
-      "Keep \"Joker\"",
-      "through an entire",
-      "ante."
-    }end,
-    setup=function()
-      BG.Progress["Joker"].num_jokers=0
-      BG.Progress["Joker"].had_at_start=false
-    end
-  },
-  {
-    name="Joker Slots",
-    text=function() return {
-      "Have 7",
-      "joker slots."
-    }end
-  },
-  {
-    name="Big Hand",
-    text=function() return{
-      "Have 12 cards",
-      "in your hand."
-    }end
-  }
+  -- {
+  --   name="Sequence",
+  --   text=function() return{
+  --     "Beat a blind by",
+  --     "playing a high card,",
+  --     "then a pair, then a",
+  --     "three of a kind."
+  --   } end,
+  --   setup = function()
+  --     BG.Progress["Sequence"].hand_progress=0
+  --   end
+  -- },
+  -- {
+  --   name="Precision",
+  --   text=function() return{
+  --     "Beat the boss blind",
+  --     "of ante 4 on the",
+  --     "15th hand of the run.",
+  --     "(" .. tostring(G.GAME.hands_played) .. " hands played",
+  --     "so far)."
+  --   } end
+  -- },
+  -- {
+  --   name="Clearance",
+  --   text=function() return{
+  --     "Sell 3 jokers",
+  --     "during a blind,",
+  --     "then beat it.",
+  --     "(" .. tostring(BG.Progress["Clearance"].jokers_sold_this_blind) .. " jokers sold",
+  --     "this blind.)"
+  --   } end,
+  --   setup=function()
+  --     BG.Progress["Clearance"].jokers_sold_this_blind=0
+  --   end
+  -- },
+  -- {
+  --   name="Nevermind",
+  --   text=function() return{
+  --     "Skip 2 booster",
+  --     "packs in a",
+  --     "single shop."
+  --   } end,
+  --   setup=function()
+  --     BG.Progress["Nevermind"].booster_packs_skipped_this_shop=0
+  --   end
+  -- },
+  -- {
+  --   name="Creation",
+  --   text=function() return{
+  --     "Create 6 jokers",
+  --     "through means",
+  --     "other than buying.",
+  --     "(" .. tostring(BG.Progress["Creation"].jokers_created) .. " created",
+  --     "so far.)"
+  --   } end,
+  --   setup=function()
+  --     BG.Progress["Creation"].jokers_created=0
+  --   end
+  -- },
+  -- {
+  --   name="Wheel of Fortune",
+  --   text=function() return{
+  --     "Successfully add",
+  --     "an edition to a",
+  --     "joker using",
+  --     "Wheel of Fortune."
+  --   }end
+  -- },
+  -- {
+  --   name="Joker",
+  --   text=function() return{
+  --     "Keep \"Joker\"",
+  --     "through an entire",
+  --     "ante."
+  --   }end,
+  --   setup=function()
+  --     BG.Progress["Joker"].num_jokers=0
+  --     BG.Progress["Joker"].had_at_start=false
+  --   end
+  -- },
+  -- {
+  --   name="Joker Slots",
+  --   text=function() return {
+  --     "Have 7",
+  --     "joker slots."
+  --   }end
+  -- },
+  -- {
+  --   name="Big Hand",
+  --   text=function() return{
+  --     "Have 12 cards",
+  --     "in your hand."
+  --   }end
+  -- }
 }
 
 -- Shuffles in-place
@@ -604,6 +604,7 @@ end
 
 function BG.Gameplay.set_impossible(challenge_name)
   if BG.bingo_won then return end
+  if BG.Progress[challenge_name] == nil then return end
   if not BG.Progress[challenge_name].completed then
     sendTraceMessage("Setting challenge " .. challenge_name .. " to impossible.","BingoLog")
     BG.Progress[challenge_name].impossible=true
@@ -679,6 +680,7 @@ end
 
 function BG.Gameplay.set_complete(challenge_name)
   if BG.bingo_won then return end
+  if BG.Progress[challenge_name]==nil then return end
   if not BG.Progress[challenge_name].impossible then
     -- TODO: Little animation or somethin' (but only if the challenge is active)
     sendTraceMessage("Completed Challenge " .. challenge_name, "BingoLog")
@@ -749,15 +751,18 @@ check_for_unlock = function(args)
       BG.Gameplay.set_complete("Win")
     end
     if args.ante == 5 then
-      BG.Progress["Faceless 5"].ante_5_blinds=0
-    end
-    if args.ante == 6 then
-      BG.Progress["Heartless 6"].ante_6_blinds=0
+      BG.Gameplay.set_complete("Commonality")
     end
   end
   if args.type == 'joker_added' then
     if G.GAME.round_resets.ante <= 1 then
       BG.Gameplay.set_impossible("No Early Jokers")
+    end
+    if args.card.ability.name == 'Cavendish' then
+      BG.Gameplay.set_complete("Cavendish")
+    end
+    if args.card.config.center.rarity > 1 and G.GAME.round_resets.ante < 5 then
+      BG.Gameplay.set_impossible("Commonality")
     end
     local rares = 0
     for i = 1, #G.jokers.cards do
@@ -821,10 +826,10 @@ check_for_unlock = function(args)
 
     for i=1,#args.scoring_hand do
       local card = args.scoring_hand[i]
-      if G.GAME.round_resets.ante == 5 and card.is_face() then
+      if G.GAME.round_resets.ante == 5 and card:is_face() then
         BG.Gameplay.set_impossible("Faceless 5")
       end
-      if G.GAME.round_resets.ante == 6 and card.is_suit("Hearts") then
+      if G.GAME.round_resets.ante == 6 and card:is_suit("Hearts") then
         BG.Gameplay.set_impossible("Heartless 6")
       end
     end
