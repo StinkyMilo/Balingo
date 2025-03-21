@@ -17,6 +17,7 @@
         "pseudorandom",
         "Game",
         "save_run",
-        "create_toggle"
+        "create_toggle",
+        "ease_dollars"
     ]
 }

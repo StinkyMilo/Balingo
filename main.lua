@@ -211,6 +211,150 @@ BG.Challenges = {
       "containing every",
       "type of seal."
     } end
+  },
+  {
+    name="Big Purchase",
+    text=function() return{
+      "Spend $50 at",
+      "a single shop.",
+      "($" .. BG.Progress["Big Purchase"].money_spent_current_shop .. " spent in",
+      "current shop)."
+    } end,
+    setup = function()
+      BG.Progress["Big Purchase"].money_spent_current_shop=0
+    end
+  },
+  {
+    name="Faceless 5",
+    text=function() return{
+      "Beat all 3 blinds",
+      "of ante 5 without",
+      "playing any face",
+      "cards."
+    } end,
+    setup = function()
+      BG.Progress["Faceless 5"].ante_5_blinds=0
+    end
+  },
+  {
+    name="Heartless 6",
+    text=function() return{
+      "Beat all 3 blinds",
+      "of ante 6 without",
+      "playing any heart",
+      "cards."
+    } end,
+    setup = function()
+      BG.Progress["Heartless 6"].ante_6_blinds=0
+    end
+  },
+  {
+    name="Cavendish",
+    text=function() return{
+      "Obtain Cavendish."
+    } end
+  },
+  {
+    name="Commonality",
+    text=function() return{
+      "Take no non-common",
+      "jokers before",
+      "ante 5."
+    } end
+  },
+  {
+    name="Sequence",
+    text=function() return{
+      "Beat a blind by",
+      "playing a high card,",
+      "then a pair, then a",
+      "three of a kind."
+    } end,
+    setup = function()
+      BG.Progress["Sequence"].hand_progress=0
+    end
+  },
+  {
+    name="Precision",
+    text=function() return{
+      "Beat the boss blind",
+      "of ante 4 on the",
+      "15th hand of the run.",
+      "(" .. tostring(G.GAME.hands_played) .. " hands played",
+      "so far)."
+    } end
+  },
+  {
+    name="Clearance",
+    text=function() return{
+      "Sell 3 jokers",
+      "during a blind,",
+      "then beat it.",
+      "(" .. tostring(BG.Progress["Clearance"].jokers_sold_this_blind) .. " jokers sold",
+      "this blind.)"
+    } end,
+    setup=function()
+      BG.Progress["Clearance"].jokers_sold_this_blind=0
+    end
+  },
+  {
+    name="Nevermind",
+    text=function() return{
+      "Skip 2 booster",
+      "packs in a",
+      "single shop."
+    } end,
+    setup=function()
+      BG.Progress["Nevermind"].booster_packs_skipped_this_shop=0
+    end
+  },
+  {
+    name="Creation",
+    text=function() return{
+      "Create 6 jokers",
+      "through means",
+      "other than buying.",
+      "(" .. tostring(BG.Progress["Creation"].jokers_created) .. " created",
+      "so far.)"
+    } end,
+    setup=function()
+      BG.Progress["Creation"].jokers_created=0
+    end
+  },
+  {
+    name="Wheel of Fortune",
+    text=function() return{
+      "Successfully add",
+      "an edition to a",
+      "joker using",
+      "Wheel of Fortune."
+    }end
+  },
+  {
+    name="Joker",
+    text=function() return{
+      "Keep \"Joker\"",
+      "through an entire",
+      "ante."
+    }end,
+    setup=function()
+      BG.Progress["Joker"].num_jokers=0
+      BG.Progress["Joker"].had_at_start=false
+    end
+  },
+  {
+    name="Joker Slots",
+    text=function() return {
+      "Have 7",
+      "joker slots."
+    }end
+  },
+  {
+    name="Big Hand",
+    text=function() return{
+      "Have 12 cards",
+      "in your hand."
+    }end
   }
 }
 
@@ -604,6 +748,12 @@ check_for_unlock = function(args)
     if args.ante == 9 then
       BG.Gameplay.set_complete("Win")
     end
+    if args.ante == 5 then
+      BG.Progress["Faceless 5"].ante_5_blinds=0
+    end
+    if args.ante == 6 then
+      BG.Progress["Heartless 6"].ante_6_blinds=0
+    end
   end
   if args.type == 'joker_added' then
     if G.GAME.round_resets.ante <= 1 then
@@ -668,6 +818,16 @@ check_for_unlock = function(args)
     if args.handname == 'Five of a Kind' then
       BG.Gameplay.set_complete("Five of a Kind")
     end
+
+    for i=1,#args.scoring_hand do
+      local card = args.scoring_hand[i]
+      if G.GAME.round_resets.ante == 5 and card.is_face() then
+        BG.Gameplay.set_impossible("Faceless 5")
+      end
+      if G.GAME.round_resets.ante == 6 and card.is_suit("Hearts") then
+        BG.Gameplay.set_impossible("Heartless 6")
+      end
+    end
   end
   if args.type == 'money' then
     if G.GAME.dollars <= -15 then
@@ -700,6 +860,18 @@ check_for_unlock = function(args)
     if BG.Progress["Rising Power"] ~= nil then
       BG.Progress["Rising Power"].poker_hands_upgraded_this_round = BG.Gameplay.get_poker_hands_default()
     end
+    if G.GAME.round_resets.ante == 5 then
+      BG.Progress["Faceless 5"].ante_5_blinds = BG.Progress["Faceless 5"].ante_5_blinds + 1
+      if BG.Progress["Faceless 5"].ante_5_blinds >= 3 then
+        BG.Gameplay.set_complete("Faceless 5")
+      end
+    end
+    if G.GAME.round_resets.ante == 6 then
+      BG.Progress["Heartless 6"].ante_6_blinds = BG.Progress["Heartless 6"].ante_6_blinds + 1
+      if BG.Progress["Heartless 6"].ante_6_blinds >= 3 then
+        BG.Gameplay.set_complete("Heartless 6")
+      end
+    end
   end
   if args.type == "upgrade_hand" then
     if args.level >= 12 then
@@ -728,6 +900,26 @@ check_for_unlock = function(args)
       BG.Gameplay.set_complete("Chippy")
     end
   end
+  if args.type == "money_mod" then
+    if args.mod < 0 and G.shop then
+      BG.Progress["Big Purchase"].money_spent_current_shop=BG.Progress["Big Purchase"].money_spent_current_shop-args.mod
+      if BG.Progress["Big Purchase"].money_spent_current_shop >= 50 then
+        BG.Gameplay.set_complete("Big Purchase")
+      end
+    end
+  end
+  if args.type == "shop_entered" then
+    BG.Progress["Big Purchase"].money_spent_current_shop=0
+  end
+  return ret
+end
+
+local update_shop_old = Game.update_shop
+function Game:update_shop(dt)
+  if not G.STATE_COMPLETE and not G.shop then
+    check_for_unlock({type="shop_entered"})
+  end
+  local ret = update_shop_old(self,dt)
   return ret
 end
 
@@ -740,6 +932,13 @@ function Card:calculate_joker (context)
     check_for_unlock({type="xmult_trigger",amount=result.Xmult_mod})
   end
   return result
+end
+
+local ease_dollars_old = ease_dollars
+function ease_dollars(mod,instant)
+  local ret = ease_dollars_old(mod,instant)
+  check_for_unlock({type="money_mod",mod=mod})
+  return ret
 end
 
 local add_to_deck_old = Card.add_to_deck
