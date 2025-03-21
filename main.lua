@@ -681,7 +681,7 @@ end
 function BG.Gameplay.set_complete(challenge_name)
   if BG.bingo_won then return end
   if BG.Progress[challenge_name]==nil then return end
-  if not BG.Progress[challenge_name].impossible then
+  if not BG.Progress[challenge_name].impossible and not BG.Progress[challenge_name].completed then
     -- TODO: Little animation or somethin' (but only if the challenge is active)
     sendTraceMessage("Completed Challenge " .. challenge_name, "BingoLog")
     BG.Progress[challenge_name].completed=true
@@ -689,6 +689,7 @@ function BG.Gameplay.set_complete(challenge_name)
       sendTraceMessage("Win found","BingoLog")
       BG.Gameplay.show_win()
     end
+    BG.UI.notify_bingo_alert(BG.Util.get_challenge_index(challenge_name))
   end
 end
 
@@ -1178,4 +1179,127 @@ function BG.Gameplay.show_win()
         end
     end)
 }))
+end
+
+function BG.UI.notify_bingo_alert(bingo_challenge)
+  G.E_MANAGER:add_event(Event({
+    no_delete = true,
+    pause_force = true,
+    timer = 'UPTIME',
+    func = function()
+      if G.achievement_notification then
+          G.achievement_notification:remove()
+          G.achievement_notification = nil
+      end
+      G.achievement_notification = G.achievement_notification or UIBox{
+          definition = BG.UI.create_UIBox_bingo_alert(bingo_challenge),
+          config = {align='cr', offset = {x=20,y=0},major = G.ROOM_ATTACH, bond = 'Weak'}
+      }
+      return true
+    end
+  }), 'achievement')
+  G.E_MANAGER:add_event(Event({
+      no_delete = true,
+      trigger = 'after',
+      pause_force = true,
+      timer = 'UPTIME',
+      delay = 0.1,
+      func = function()
+          G.achievement_notification.alignment.offset.x = G.ROOM.T.x - G.achievement_notification.UIRoot.children[1].children[1].T.w - 0.8
+        return true
+      end
+  }), 'achievement')
+  G.E_MANAGER:add_event(Event({
+      no_delete = true,
+      pause_force = true,
+      trigger = 'after',
+      timer = 'UPTIME',
+      delay = 0.1,
+      func = function()
+          play_sound('highlight1', nil, 0.5)
+          play_sound('foil2', 0.5, 0.4)
+        return true
+      end
+  }), 'achievement')
+  G.E_MANAGER:add_event(Event({
+    no_delete = true,
+    pause_force = true,
+    trigger = 'after',
+    delay = 3,
+    timer = 'UPTIME',
+    func = function()
+      G.achievement_notification.alignment.offset.x = 20
+      return true
+    end
+  }), 'achievement')
+  G.E_MANAGER:add_event(Event({
+      no_delete = true,
+      pause_force = true,
+      trigger = 'after',
+      delay = 0.5,
+      timer = 'UPTIME',
+      func = function()
+          if G.achievement_notification then
+              G.achievement_notification:remove()
+              G.achievement_notification = nil
+          end
+        return true
+      end
+  }), 'achievement')
+end
+
+function BG.Util.get_challenge_index(challenge_name)
+  for k,v in ipairs(BG.Challenges) do
+    if v.name==challenge_name then
+      return k
+    end
+  end
+end
+
+function BG.UI.create_UIBox_bingo_alert(challenge_id)
+  local _c, _atlas = G.P_CENTERS["j_joker"], G.ASSET_ATLAS["Joker"]
+
+  local t_s = Sprite(0,0,1.5*(_atlas.px/_atlas.py),1.5,_atlas, _c and _c.pos or {x=3, y=0})
+  t_s.states.drag.can = false
+  t_s.states.hover.can = false
+  t_s.states.collide.can = false
+  local challenge_name = BG.Challenges[challenge_id].name
+  sendTraceMessage("Challenge name is " .. tostring(challenge_name),"BingoLog")
+  local subtext_full = BG.Challenges[challenge_id].text() 
+  local subtext = ""
+  for k,v in ipairs(subtext_full) do
+    subtext = subtext .. v .. " "
+  end
+
+  local name = challenge_name
+
+    local t = {n=G.UIT.ROOT, config = {align = 'cl', r = 0.1, padding = 0.06, colour = G.C.UI.TRANSPARENT_DARK}, nodes={
+    {n=G.UIT.R, config={align = "cl", padding = 0.2, minw = 20, r = 0.1, colour = G.C.BLACK, outline = 1.5, outline_colour = G.C.GREY}, nodes={
+      {n=G.UIT.R, config={align = "cm", r = 0.1}, nodes={
+        {n=G.UIT.R, config={align = "cm", r = 0.1}, nodes={
+          {n=G.UIT.O, config={object = t_s}},
+        }},
+        false and {n=G.UIT.R, config={align = "cm", padding = 0.04}, nodes={
+          {n=G.UIT.R, config={align = "cm", maxw = 3.4}, nodes={
+            {n=G.UIT.T, config={text = subtext, scale = 0.5, colour = G.C.FILTER, shadow = true}},
+          }},
+          {n=G.UIT.R, config={align = "cm", maxw = 3.4}, nodes={
+            {n=G.UIT.T, config={text = localize('k_unlocked_ex'), scale = 0.35, colour = G.C.FILTER, shadow = true}},
+          }}
+        }}
+        or {n=G.UIT.R, config={align = "cm", padding = 0.04}, nodes={
+          {n=G.UIT.R, config={align = "cm", maxw = 3.4, padding = 0.1}, nodes={
+            {n=G.UIT.T, config={text = name, scale = 0.4, colour = G.C.UI.TEXT_LIGHT, shadow = true}},
+          }},
+          {n=G.UIT.R, config={align = "cm", maxw = 3.4}, nodes={
+            {n=G.UIT.T, config={text = subtext, scale = 0.3, colour = G.C.FILTER, shadow = true}},
+          }},
+          {n=G.UIT.R, config={align = "cm", maxw = 3.4}, nodes={
+            {n=G.UIT.T, config={text = localize('k_unlocked_ex'), scale = 0.35, colour = G.C.FILTER, shadow = true}},
+          }}
+        }}
+      }}
+    }}
+  }}
+  return t
 end
