@@ -112,7 +112,7 @@ BG.Challenges = {
     name="Big Sale",
     text=function() return {
       "Sell a joker",
-      "for $9 or more."
+      "for $6 or more."
     } end
   },
   {
