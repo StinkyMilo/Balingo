@@ -935,7 +935,7 @@ local calculate_joker_old = Card.calculate_joker
 function Card:calculate_joker (context)
   local result = calculate_joker_old(self,context)
   -- sendTraceMessage("Calculating Joker","BingoLog")
-  if result and result.Xmult_mod then
+  if result and type(result) == "table" and result.Xmult_mod then
     sendTraceMessage("Xmult mod found","BingoLog")
     check_for_unlock({type="xmult_trigger",amount=result.Xmult_mod})
   end
