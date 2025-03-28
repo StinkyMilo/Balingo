@@ -1137,39 +1137,6 @@ G.FUNCS.paste_bingo_seed = function(e)
   G.FUNCS.text_input_key({key = 'return'})
 end
 
-function TRANSPOSE_TEXT_INPUT(amount)
-  local position_child = nil
-  local hook = G.CONTROLLER.text_input_hook
-  local text = G.CONTROLLER.text_input_hook.config.ref_table.text
-  -- sendTraceMessage('[[TRANSPOSE]] Text input hook is ' .. tostring(hook),'BingoLog')
-  -- sendTraceMessage('[[TRANSPOSE]] Text input text is ' .. tostring(text),'BingoLog')
-  for i = 1, #hook.children do
-    -- sendTraceMessage('[[TRANSPOSE]] Child config is ' .. tostring(hook.children[i].config),'BingoLog')
-    if hook.children[i].config then
-      -- sendTraceMessage('[[TRANSPOSE]] Child ID is ' .. tostring(hook.children[i].config.id),'BingoLog')
-      -- sendTraceMessage('[[TRANSPOSE]] Looking for ID ' .. tostring(G.CONTROLLER.text_input_id .. '_position'),'BingoLog')
-     if hook.children[i].config.id == G.CONTROLLER.text_input_id..'_position' then
-        position_child = i; break
-      end
-    end
-  end
-  sendTraceMessage('[[TRANSPOSE]] Position child is ' .. tostring(position_child),'BingoLog')
-
-  local dir = (amount/math.abs(amount)) or 0
-  
-  while amount ~= 0 do
-    if position_child + dir < 1 or position_child + dir >= #hook.children then break end
-    local real_letter = hook.children[position_child+dir].config.id:sub(1, 7) == 'letter_' and hook.children[position_child+dir].config.text ~= ''
-    SWAP(hook.children, position_child, position_child + dir)
-    if real_letter then amount = amount - dir end
-    position_child = position_child + dir
-  end
-
-  text.current_position = math.min(position_child-1, string.len(text.ref_table[text.ref_value]))
-  hook.UIBox:recalculate(true)
-  text.ref_table[text.ref_value] = GET_TEXT_FROM_INPUT()
-end
-
 function BG.Gameplay.show_win()
   G.E_MANAGER:add_event(Event({
     trigger = 'immediate',
