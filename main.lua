@@ -274,6 +274,15 @@ BG.Challenges = {
       BG.Progress["Sequence"].hand_progress=0
     end
   },
+  {
+    name="Wheel of Fortune",
+    text=function() return{
+      "Successfully add",
+      "an edition to a",
+      "joker using",
+      "Wheel of Fortune."
+    }end
+  },
   -- {
   --   name="Precision",
   --   text=function() return{
@@ -309,40 +318,6 @@ BG.Challenges = {
   --   end
   -- },
   -- {
-  --   name="Creation",
-  --   text=function() return{
-  --     "Create 6 jokers",
-  --     "through means",
-  --     "other than buying.",
-  --     "(" .. tostring(BG.Progress["Creation"].jokers_created) .. " created",
-  --     "so far.)"
-  --   } end,
-  --   setup=function()
-  --     BG.Progress["Creation"].jokers_created=0
-  --   end
-  -- },
-  -- {
-  --   name="Wheel of Fortune",
-  --   text=function() return{
-  --     "Successfully add",
-  --     "an edition to a",
-  --     "joker using",
-  --     "Wheel of Fortune."
-  --   }end
-  -- },
-  -- {
-  --   name="Joker",
-  --   text=function() return{
-  --     "Keep \"Joker\"",
-  --     "through an entire",
-  --     "ante."
-  --   }end,
-  --   setup=function()
-  --     BG.Progress["Joker"].num_jokers=0
-  --     BG.Progress["Joker"].had_at_start=false
-  --   end
-  -- },
-  -- {
   --   name="Joker Slots",
   --   text=function() return {
   --     "Have 7",
@@ -352,7 +327,7 @@ BG.Challenges = {
   -- {
   --   name="Big Hand",
   --   text=function() return{
-  --     "Have 12 cards",
+  --     "Have 11 cards",
   --     "in your hand."
   --   }end
   -- }
@@ -937,6 +912,9 @@ check_for_unlock = function(args)
       BG.Progress["Big Purchase"].money_spent_current_shop=0
     end
   end
+  if args.type == "wheel" then
+    BG.Gameplay.set_complete("Wheel of Fortune")
+  end
   return ret
 end
 
@@ -1321,4 +1299,14 @@ function BG.UI.create_UIBox_bingo_alert(challenge_id)
     }}
   }}
   return t
+end
+
+local poll_edition_old = poll_edition
+
+function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
+  local ret = poll_edition_old(_key, _mod, _no_neg, _guaranteed, _options)
+  if _key == 'wheel_of_fortune' then
+    check_for_unlock({type="wheel",edition=ret})
+  end
+  return ret
 end
