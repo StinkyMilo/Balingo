@@ -283,54 +283,28 @@ BG.Challenges = {
       "Wheel of Fortune."
     }end
   },
-  -- {
-  --   name="Precision",
-  --   text=function() return{
-  --     "Beat the boss blind",
-  --     "of ante 4 on the",
-  --     "15th hand of the run.",
-  --     "(" .. tostring(G.GAME.hands_played) .. " hands played",
-  --     "so far)."
-  --   } end
-  -- },
-  -- {
-  --   name="Clearance",
-  --   text=function() return{
-  --     "Sell 3 jokers",
-  --     "during a blind,",
-  --     "then beat it.",
-  --     "(" .. tostring(BG.Progress["Clearance"].jokers_sold_this_blind) .. " jokers sold",
-  --     "this blind.)"
-  --   } end,
-  --   setup=function()
-  --     BG.Progress["Clearance"].jokers_sold_this_blind=0
-  --   end
-  -- },
-  -- {
-  --   name="Nevermind",
-  --   text=function() return{
-  --     "Skip 2 booster",
-  --     "packs in a",
-  --     "single shop."
-  --   } end,
-  --   setup=function()
-  --     BG.Progress["Nevermind"].booster_packs_skipped_this_shop=0
-  --   end
-  -- },
-  -- {
-  --   name="Joker Slots",
-  --   text=function() return {
-  --     "Have 7",
-  --     "joker slots."
-  --   }end
-  -- },
-  -- {
-  --   name="Big Hand",
-  --   text=function() return{
-  --     "Have 11 cards",
-  --     "in your hand."
-  --   }end
-  -- }
+  {
+    name="Just Right",
+    text=function() return{
+      "Beat a blind with",
+      "the exact score",
+      "needed."
+    }end
+  },
+  {
+    name="A Crisp Bill",
+    text=function() return{
+      "Gain exactly $10",
+      "from Temperance."
+    }end
+  },
+  {
+    name="Careful Spending",
+    text=function() return{
+      "Enter ante 3",
+      "with exactly $23."
+    }end
+  }
 }
 
 -- Shuffles in-place
@@ -729,6 +703,11 @@ check_for_unlock = function(args)
     if args.ante == 5 then
       BG.Gameplay.set_complete("Commonality")
     end
+    if args.ante == 3 then
+      if G.GAME.dollars == 23 then
+        BG.Gameplay.set_complete("Careful Spending")
+      end
+    end
   end
   if args.type == 'joker_added' then
     if G.GAME.round_resets.ante <= 1 then
@@ -870,7 +849,9 @@ check_for_unlock = function(args)
       end
       BG.Progress["Sequence"].hand_progress=0
     end
-    
+    if G.GAME.current_round.chip_total == G.GAME.blind.chips then
+      BG.Gameplay.set_complete("Just Right")
+    end
   end
   if args.type == "upgrade_hand" then
     if args.level >= 12 then
@@ -914,6 +895,11 @@ check_for_unlock = function(args)
   end
   if args.type == "wheel" then
     BG.Gameplay.set_complete("Wheel of Fortune")
+  end
+  if args.type == "temperance" then
+    if args.money == 10 then
+      BG.Gameplay.set_complete("A Crisp Bill")
+    end
   end
   return ret
 end
@@ -1308,5 +1294,14 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
   if _key == 'wheel_of_fortune' then
     check_for_unlock({type="wheel",edition=ret})
   end
+  return ret
+end
+
+local use_consumeable_old = Card.use_consumeable
+function Card:use_consumeable(area,copier)
+  if self.ability.name == 'Temperance' then
+    check_for_unlock({type='temperance',money=self.ability.money})
+  end
+  local ret = use_consumeable_old(self,area,copier)
   return ret
 end
