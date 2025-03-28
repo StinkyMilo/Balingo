@@ -262,18 +262,18 @@ BG.Challenges = {
       "ante 5."
     } end
   },
-  -- {
-  --   name="Sequence",
-  --   text=function() return{
-  --     "Beat a blind by",
-  --     "playing a high card,",
-  --     "then a pair, then a",
-  --     "three of a kind."
-  --   } end,
-  --   setup = function()
-  --     BG.Progress["Sequence"].hand_progress=0
-  --   end
-  -- },
+  {
+    name="Sequence",
+    text=function() return{
+      "Beat a blind by",
+      "playing a high card,",
+      "then a pair, then a",
+      "three of a kind."
+    } end,
+    setup = function()
+      BG.Progress["Sequence"].hand_progress=0
+    end
+  },
   -- {
   --   name="Precision",
   --   text=function() return{
@@ -779,7 +779,7 @@ check_for_unlock = function(args)
     BG.Gameplay.set_complete("Disable Boss")
   end
   if args.type == 'hand' then
-    sendTraceMessage("Hand played","BingoLog")
+    -- sendTraceMessage("Hand played","BingoLog")
 
     local total_retriggers = 0
     for i=1,#args.scoring_hand do
@@ -834,6 +834,17 @@ check_for_unlock = function(args)
         BG.Gameplay.set_impossible("Heartless 6")
       end
     end
+
+    sendTraceMessage("Hand name: " .. args.handname .. ", Hands Scored: " .. G.GAME.current_round.hands_played,"BingoLog")
+    if BG.Progress["Sequence"] ~= nil then
+      if (args.handname == 'High Card' and G.GAME.current_round.hands_played == 0) or (args.handname == 'Pair' and G.GAME.current_round.hands_played == 1) or (args.handname == 'Three of a Kind' and G.GAME.current_round.hands_played == 2) then
+        sendTraceMessage("Incrementing progress...","BingoLog")
+        BG.Progress["Sequence"].hand_progress=BG.Progress["Sequence"].hand_progress+1
+      else
+        sendTraceMessage("Resetting progress...","BingoLog")
+        BG.Progress["Sequence"].hand_progress=0
+      end
+    end
   end
   if args.type == 'money' then
     if G.GAME.dollars <= -15 then
@@ -878,6 +889,13 @@ check_for_unlock = function(args)
         BG.Gameplay.set_complete("Heartless 6")
       end
     end
+    if BG.Progress["Sequence"] ~= nil then
+      if BG.Progress["Sequence"].hand_progress >= 3 then
+        BG.Gameplay.set_complete("Sequence")
+      end
+      BG.Progress["Sequence"].hand_progress=0
+    end
+    
   end
   if args.type == "upgrade_hand" then
     if args.level >= 12 then
