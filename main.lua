@@ -301,7 +301,7 @@ BG.Challenges = {
   {
     name="Careful Spending",
     text=function() return{
-      "Enter ante 3",
+      "Enter an ante",
       "with exactly $23."
     }end
   }
@@ -703,10 +703,8 @@ check_for_unlock = function(args)
     if args.ante == 5 then
       BG.Gameplay.set_complete("Commonality")
     end
-    if args.ante == 3 then
-      if G.GAME.dollars == 23 then
-        BG.Gameplay.set_complete("Careful Spending")
-      end
+    if G.GAME.dollars == 23 then
+      BG.Gameplay.set_complete("Careful Spending")
     end
   end
   if args.type == 'joker_added' then
@@ -849,7 +847,8 @@ check_for_unlock = function(args)
       end
       BG.Progress["Sequence"].hand_progress=0
     end
-    if G.GAME.current_round.chip_total == G.GAME.blind.chips then
+    sendTraceMessage("Current chip total: " .. tostring(G.GAME.chips) .. ", needed: " .. G.GAME.blind.chips,"BingoLog")
+    if G.GAME.chips == G.GAME.blind.chips then
       BG.Gameplay.set_complete("Just Right")
     end
   end
