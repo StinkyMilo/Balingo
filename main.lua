@@ -1050,6 +1050,9 @@ function Game:start_run(args)
         sendTraceMessage("Bingo Seed Not Found. Setting to " .. BG.bingo_seed_str,"BingoLog")
       end
     end
+    if savetable == nil then
+      BG.bingo_won=false
+    end
     BG.Gameplay.setup_challenges(savetable ~= nil)
     BG.challenges_generated=true
   end
@@ -1204,7 +1207,9 @@ local create_UIBox_win_old = create_UIBox_win
 function create_UIBox_win(win_str)
   local ret = create_UIBox_win_old()
   if win_str ~= nil then
-    ret.nodes[1].nodes[2].nodes[1].nodes[1].nodes[1].nodes[1].nodes[1].config.object = DynaText({string = {win_str}, colours = {G.C.EDITION},shadow = true, float = true, spacing = 10, rotate = true, scale = 1.5, pop_in = 0.4, maxw = 6.5})
+    local config = ret.nodes[1].nodes[2].nodes[1].nodes[1].nodes[1].nodes[1].nodes[1].config
+    config.object:remove()
+    config.object = DynaText({string = {win_str}, colours = {G.C.EDITION},shadow = true, float = true, spacing = 10, rotate = true, scale = 1.5, pop_in = 0.4, maxw = 6.5})
   end
   return ret
 end
