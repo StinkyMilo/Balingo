@@ -1173,15 +1173,42 @@ function BG.Gameplay.show_win()
     blocking = false,
     blockable = false,
     func = (function()
-        if G.STATE == G.STATES.ROUND_EVAL then 
-            win_game()
-            G.GAME.won = true
-            BG.bingo_won=true
-            return true
-        end
-    end)
-}))
+          G.E_MANAGER:add_event(Event({
+              trigger = 'immediate',
+              func = (function()
+                  for k, v in pairs(G.I.CARD) do
+                      v.sticker_run = nil
+                  end
+                  
+                  play_sound('win')
+                  G.SETTINGS.paused = true
+
+                  G.FUNCS.overlay_menu{
+                      definition = create_UIBox_win('BINGO!'),
+                      config = {no_esc = true}
+                  }
+                  
+                  return true
+              end)
+          }))
+        G.GAME.won = true
+        BG.bingo_won=true
+        return true
+      end)
+  }))
 end
+
+
+
+local create_UIBox_win_old = create_UIBox_win
+function create_UIBox_win(win_str)
+  local ret = create_UIBox_win_old()
+  if win_str ~= nil then
+    ret.nodes[1].nodes[2].nodes[1].nodes[1].nodes[1].nodes[1].nodes[1].config.object = DynaText({string = {win_str}, colours = {G.C.EDITION},shadow = true, float = true, spacing = 10, rotate = true, scale = 1.5, pop_in = 0.4, maxw = 6.5})
+  end
+  return ret
+end
+
 
 function BG.UI.notify_bingo_alert(bingo_challenge)
   G.E_MANAGER:add_event(Event({

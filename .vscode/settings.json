@@ -18,6 +18,7 @@
         "Game",
         "save_run",
         "create_toggle",
-        "ease_dollars"
+        "ease_dollars",
+        "create_UIBox_win"
     ]
 }
