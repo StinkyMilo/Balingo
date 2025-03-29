@@ -8,3 +8,12 @@ I still want to add more challenges to this mod (and I likely have some bugs to 
 ## Installation
 
 Follow the instructions for installing Steamodded <a href="https://github.com/Steamodded/smods/wiki">here.</a> Then copy the full folder of the Github repository into your Balato mods folder. Have fun!
+
+
+## Credits
+
+Mod is by me! I'm Milo. Check out my website <a href="https://computercow.cc/">here.</a>
+
+Some challenge suggestions came from user Dulphin on the Balatro discord.
+
+Balatro is by LocalThunk, but I'm sure you know that already!
