@@ -301,7 +301,7 @@ BG.Challenges = {
   {
     name="Careful Spending",
     text=function() return{
-      "Finish an ante",
+      "Beat a boss blind",
       "with exactly $23."
     }end
   }
