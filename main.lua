@@ -440,7 +440,7 @@ function G.UIDEF.run_info(go_to_bingo)
   local page_obj = {tabs = {
       {
         label = localize('b_poker_hands'),
-        chosen = not go_to_bingo,
+        chosen = not BG.bingo_active or not go_to_bingo,
         tab_definition_function = create_UIBox_current_hands,
       },
       {
@@ -1057,7 +1057,9 @@ function G.UIDEF.run_setup_option(type)
   if type == 'New Run' then
     table.insert(new_node.nodes,create_toggle{col = true, label = "Bingo", label_scale = 0.25, w = 0, scale = 0.7, ref_table = BG, ref_value = 'set_bingo_active'})
     if BG.bingo_active then
-      table.insert(new_node.nodes,create_toggle{col=true,label='Continue Bingo',label_scale=0.25,w=0,scale=0.7,ref_table=BG,ref_value='maintain_bingo'})
+      BG.maintain_bingo=true
+      local new_toggle = create_toggle{col=true,label='Continue Bingo',label_scale=0.25,w=0,scale=0.7,ref_table=BG,ref_value='maintain_bingo',toggle_active=true}
+      table.insert(new_node.nodes,new_toggle)
     end
   end
   table.insert(old.nodes[4].nodes[3].nodes,new_node)
@@ -1315,7 +1317,7 @@ end
 local key_press_update_old = Controller.key_press_update
 function Controller:key_press_update(key,dt)
   local ret = key_press_update_old(self,key,dt)
-  if key == 'b' then
+  if BG.bingo_active and key == 'b' and not G.SETTINGS.paused then
     -- Go to bingo
     G.SETTINGS.paused = true
     G.FUNCS.overlay_menu{
