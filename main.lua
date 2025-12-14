@@ -436,11 +436,11 @@ function BG.UI.get_challenge_box(index)
   return root_node
 end
 
-function G.UIDEF.run_info()
+function G.UIDEF.run_info(go_to_bingo)
   local page_obj = {tabs = {
       {
         label = localize('b_poker_hands'),
-        chosen = true,
+        chosen = not go_to_bingo,
         tab_definition_function = create_UIBox_current_hands,
       },
       {
@@ -464,7 +464,8 @@ function G.UIDEF.run_info()
   if BG.bingo_active then
     table.insert(page_obj.tabs,{
       label = "Bingo",
-      tab_definition_function = BG.UI.BoardDisplay
+      tab_definition_function = BG.UI.BoardDisplay,
+      chosen=go_to_bingo
     })
   end
   return create_UIBox_generic_options({contents ={create_tabs(
@@ -1302,5 +1303,24 @@ function Card:use_consumeable(area,copier)
     check_for_unlock({type='temperance',money=self.ability.money})
   end
   local ret = use_consumeable_old(self,area,copier)
+  return ret
+end
+
+-- This is how we open the run info menu:
+-- G.SETTINGS.paused = true
+--   G.FUNCS.overlay_menu{
+--     definition = G.UIDEF.run_info(),
+--   }
+
+local key_press_update_old = Controller.key_press_update
+function Controller:key_press_update(key,dt)
+  local ret = key_press_update_old(self,key,dt)
+  if key == 'b' then
+    -- Go to bingo
+    G.SETTINGS.paused = true
+    G.FUNCS.overlay_menu{
+      definition = G.UIDEF.run_info(true),
+    }
+  end
   return ret
 end
