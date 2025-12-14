@@ -332,7 +332,10 @@ BG.Challenges = {
       "in a single shop",
       "(" .. BG.Progress["Nevermind"].boosters_skipped_current_shop .. " skipped",
       "in current shop)"
-    }end
+    }end,
+    setup = function()
+      BG.Progress["Nevermind"].boosters_skipped_current_shop=0
+    end
   },
   {
     name="Scrabbler",
@@ -341,7 +344,10 @@ BG.Challenges = {
       "word with the first letter",
       "of each of your jokers",
       "(current word: " .. BG.Progress["Scrabbler"].current_word .. ")"
-    }end
+    }end,
+    setup = function()
+      BG.Progress["Scrabbler"].current_word="[NONE]"
+    end
   }
 }
 
@@ -930,6 +936,9 @@ check_for_unlock = function(args)
     if BG.Progress["Big Purchase"] ~= nil then
       BG.Progress["Big Purchase"].money_spent_current_shop=0
     end
+    if BG.Progress["Nevermind"] ~= nil then
+      BG.Progress["Nevermind"].boosters_skipped_current_shop=0
+    end
   end
   if args.type == "wheel" then
     BG.Gameplay.set_complete("Wheel of Fortune")
@@ -939,17 +948,26 @@ check_for_unlock = function(args)
       BG.Gameplay.set_complete("A Crisp Bill")
     end
   end
-  -- TODO TEST
   if args.type=="add_card" then
     local card = args.card
     if card:get_id() == 10 and card:is_suit("Clubs") then
       BG.Gameplay.set_complete("Special Guy")
     end
   end
-  -- TODO TEST
   if args.type=="modify_hand" then
     if #G.hand.cards == 11 then
       BG.Gameplay.set_complete("Undecardion")
+    end
+  end
+  if args.type == "copy_joker" then
+    BG.Gameplay.set_complete("Double Bubble")
+  end
+  if args.type == "skip_booster" then
+    if BG.Progress["Nevermind"] ~= nil then
+      BG.Progress["Nevermind"].boosters_skipped_current_shop = BG.Progress["Nevermind"].boosters_skipped_current_shop+1
+      if BG.Progress["Nevermind"].boosters_skipped_current_shop >= 2 then
+        BG.Gameplay.set_complete("Nevermind")
+      end
     end
   end
   return ret
@@ -987,6 +1005,9 @@ function Card:add_to_deck (from_debuff)
   local result = add_to_deck_old(self,from_debuff)
   if not from_debuff and self.ability.set=='Joker' then
     check_for_unlock({type="joker_added",card=self})
+  end
+  if self.ability.set == 'Enhanced' or self.ability.set == 'Default' then 
+    check_for_unlock({type="add_card",card=self})
   end
   return result
 end
@@ -1382,10 +1403,6 @@ end
 local emplace_old = CardArea.emplace
 function CardArea:emplace(card,location,stay_flipped)
   local old_res = emplace_old(self,card,location,stay_flipped)
-  if self == G.deck then
-    -- TODO: See if i also need to allow for it to be hand
-    check_for_unlock({type="add_card",card=card})
-  end
   if self == G.hand then
     check_for_unlock({type="modify_hand",action="add",card=card})
   end
@@ -1394,6 +1411,7 @@ end
 
 local remove_old = CardArea.remove_card
 function CardArea:remove_card(card, discarded_only)
+  local ret = remove_old(self,card,discarded_only)
   if self == G.hand then
     if discarded_only then
       check_for_unlock({type="modify_hand",action="discard",card=card})
@@ -1401,4 +1419,22 @@ function CardArea:remove_card(card, discarded_only)
       check_for_unlock_old({type="modify_hand",action="remove",card=card})
     end
   end
+  return ret
 end
+
+local copy_card_old = copy_card
+function copy_card(other, new_card, card_scale, playing_card, strip_edition)
+  local res = copy_card_old(other, new_card, card_scale, playing_card, strip_edition)
+  if other.ability.set == 'Joker' then
+    check_for_unlock({type="copy_joker",joker=other})
+  end
+  return res
+end
+
+local skip_booster_old = G.FUNCS.skip_booster
+function G.FUNCS.skip_booster(e)
+  local res = skip_booster_old(e)
+  check_for_unlock({type="skip_booster"})
+  return res
+end
+
