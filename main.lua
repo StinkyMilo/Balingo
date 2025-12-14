@@ -304,6 +304,44 @@ BG.Challenges = {
       "Beat a boss blind",
       "with exactly $23."
     }end
+  },
+  {
+    name="Undecardion",
+    text=function() return{
+      "Have 11 cards",
+      "in your hand."
+    }end
+  },
+  {
+    name="Special Guy",
+    text=function() return{
+      "Add a 10 of clubs",
+      "to your deck."
+    }end
+  },
+  {
+    name="Double Bubble",
+    text=function() return{
+      "Duplicate a joker."
+    }end
+  },
+  {
+    name="Nevermind",
+    text=function() return{
+      "Skip 2 booster packs",
+      "in a single shop",
+      "(" .. BG.Progress["Nevermind"].boosters_skipped_current_shop .. " skipped",
+      "in current shop)"
+    }end
+  },
+  {
+    name="Scrabbler",
+    text=function() return{
+      "Spell out a 5-letter",
+      "word with the first letter",
+      "of each of your jokers",
+      "(current word: " .. BG.Progress["Scrabbler"].current_word .. ")"
+    }end
   }
 }
 
@@ -901,6 +939,19 @@ check_for_unlock = function(args)
       BG.Gameplay.set_complete("A Crisp Bill")
     end
   end
+  -- TODO TEST
+  if args.type=="add_card" then
+    local card = args.card
+    if card:get_id() == 10 and card:is_suit("Clubs") then
+      BG.Gameplay.set_complete("Special Guy")
+    end
+  end
+  -- TODO TEST
+  if args.type=="modify_hand" then
+    if #G.hand.cards == 11 then
+      BG.Gameplay.set_complete("Undecardion")
+    end
+  end
   return ret
 end
 
@@ -1326,4 +1377,28 @@ function Controller:key_press_update(key,dt)
     }
   end
   return ret
+end
+
+local emplace_old = CardArea.emplace
+function CardArea:emplace(card,location,stay_flipped)
+  local old_res = emplace_old(self,card,location,stay_flipped)
+  if self == G.deck then
+    -- TODO: See if i also need to allow for it to be hand
+    check_for_unlock({type="add_card",card=card})
+  end
+  if self == G.hand then
+    check_for_unlock({type="modify_hand",action="add",card=card})
+  end
+  return old_res
+end
+
+local remove_old = CardArea.remove_card
+function CardArea:remove_card(card, discarded_only)
+  if self == G.hand then
+    if discarded_only then
+      check_for_unlock({type="modify_hand",action="discard",card=card})
+    else
+      check_for_unlock_old({type="modify_hand",action="remove",card=card})
+    end
+  end
 end
