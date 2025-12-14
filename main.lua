@@ -1015,7 +1015,7 @@ function Game:start_run(args)
   if savetable == nil then
     BG.bingo_active=BG.set_bingo_active or BG.maintain_bingo
   else
-    BG.bingo_active=savetable.BINGO_SEED ~= nil or BG.maintain_bingo
+    BG.bingo_active=savetable.BINGO_ACTIVE or BG.maintain_bingo
     BG.Progress=savetable.BINGO_PROGRESS
     sendTraceMessage("Bingo Progress = " .. tostring(BG.Progress))
   end
@@ -1046,6 +1046,7 @@ function save_run()
   local ret = save_run_old()
   G.ARGS.save_run["BINGO_SEED"]=BG.bingo_seed_str
   G.ARGS.save_run["BINGO_PROGRESS"]=BG.Progress
+  G.ARGS.save_run["BINGO_ACTIVE"]=BG.bingo_active
   return ret
 end
 
