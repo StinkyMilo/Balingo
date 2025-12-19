@@ -1465,10 +1465,9 @@ end
 
 local align_cards_old = CardArea.align_cards
 function CardArea:align_cards()
-  -- TODO: See if it works if you just add a new joker without reordering
   local ret = align_cards_old(self)
   if self == G.jokers then
-    sendTraceMessage("Setting Joker Ranks...", "BingoLog")
+    -- sendTraceMessage("Setting Joker Ranks...", "BingoLog")
     check_for_unlock({type="move_jokers"})
   end
   return ret
