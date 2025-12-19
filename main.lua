@@ -258,7 +258,7 @@ BG.Challenges = {
   {
     name="Commonality",
     text=function() return{
-      "Take no non-common",
+      "Obtain no non-common",
       "jokers before",
       "ante 5."
     } end
